@@ -6,58 +6,45 @@
 <title>EZ|BOM — Structural Logic</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='28' cy='28' r='16' fill='white'/%3E%3Ccircle cx='72' cy='28' r='16' fill='white'/%3E%3Ccircle cx='72' cy='72' r='16' fill='white'/%3E%3Crect x='12' y='56' width='32' height='32' rx='3' fill='%23f97316'/%3E%3C/svg%3E">
 <style>
+  /* PRESERVING ORIGINAL CSS DNA */
   :root {
     --bg-main: #121212;
     --bg-card: #1e1e1e;
     --bg-input: #2a2a2a;
-    --accent-primary: #f97316;
+    --accent-primary: #f97316; 
     --accent-secondary: #00d4ff;
     --text-primary: #f5f5f5;
     --text-secondary: #b0b0b0;
     --border: #333;
     --ok: #4caf50;
-    --err: #ff5252;
   }
   
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  body { margin: 0; font-family: 'Inter', -apple-system, system-ui, sans-serif; background: var(--bg-main); color: var(--text-primary); padding: 20px; display: flex; flex-direction: column; align-items: center; }
-
+  body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: var(--bg-main); color: var(--text-primary); padding: 20px; display: flex; flex-direction: column; align-items: center; }
   header { width: 100%; max-width: 1000px; display: flex; align-items: center; gap: 15px; margin-bottom: 30px; }
   .logo-svg { width: 45px; height: 45px; }
   .logo-text { font-size: 1.8rem; letter-spacing: -0.5px; }
-  .logo-text b { font-weight: 800; color: #fff; }
+  .logo-text b { font-weight: 800; }
   .logo-text span { font-weight: 200; color: var(--text-secondary); }
 
   .container { width: 100%; max-width: 1000px; display: grid; gap: 20px; }
-  
-  .card { 
-    background: var(--bg-card); 
-    border: 1px solid var(--border); 
-    border-radius: 12px; 
-    padding: 24px; 
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-  }
-
+  .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
   h2 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; color: var(--accent-secondary); margin: 0 0 20px 0; border-left: 3px solid var(--accent-primary); padding-left: 10px; }
-
+  
   .input-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
   .field { display: flex; flex-direction: column; gap: 8px; }
   label { font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); }
   
-  select, input { background: var(--bg-input); border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 8px; font-size: 0.9rem; outline: none; transition: border 0.2s; }
-  select:focus, input:focus { border-color: var(--accent-secondary); }
-
+  select, input { background: var(--bg-input); border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 8px; font-size: 0.9rem; outline: none; }
   .preview-bar { background: rgba(0,212,255,0.05); border: 1px dashed var(--accent-secondary); padding: 12px; border-radius: 8px; font-size: 0.8rem; margin-top: 15px; display: flex; gap: 15px; }
-
-  .btn-main { background: var(--accent-primary); color: #fff; border: none; padding: 14px; border-radius: 8px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 20px; }
+  
+  .btn-add { background: var(--accent-primary); color: #fff; border: none; padding: 14px; border-radius: 8px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 20px; }
   
   .bom-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
   .bom-table th { text-align: left; padding: 12px; color: var(--text-secondary); border-bottom: 2px solid var(--border); font-size: 0.7rem; text-transform: uppercase; }
   .bom-table td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
   .qty-pill { background: var(--accent-primary); color: #fff; padding: 2px 8px; border-radius: 4px; font-weight: bold; }
 
-  /* Flash Messages */
-  .flash { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); padding: 12px 24px; border-radius: 8px; font-weight: 600; font-size: 0.9rem; opacity: 0; pointer-events: none; transition: 0.3s; z-index: 100; }
+  .flash { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); padding: 12px 24px; border-radius: 8px; opacity: 0; transition: 0.3s; z-index: 100; font-weight: 600; }
   .flash.visible { opacity: 1; }
   .flash.ok { background: var(--ok); color: #fff; }
 
@@ -76,22 +63,22 @@
 
 <div class="container">
     <div class="card">
-        <h2>Rooftop Configuration (Aeri)</h2>
+        <h2>Rooftop Config (Aeri Rail)</h2>
         <div class="input-grid">
-            <div class="field"><label>Panel Orientation</label>
+            <div class="field"><label>Orientation</label>
                 <select id="rt-orient" onchange="rtUpdate()"><option value="portrait">Portrait</option><option value="landscape">Landscape</option></select>
             </div>
             <div class="field"><label>Panel Qty</label><input type="number" id="rt-qty" value="6" min="1" oninput="rtUpdate()"></div>
             <div class="field"><label>Strings</label><input type="number" id="rt-strings" value="1" min="1"></div>
         </div>
         <div id="rt-preview" class="preview-bar"></div>
-        <button class="btn-main" onclick="addRt()">Add to Project</button>
+        <button class="btn-add" onclick="addRt()">Add to Project</button>
     </div>
 
     <div class="card">
-        <h2>Short Rail Configuration</h2>
+        <h2>Short Rail Config</h2>
         <div class="input-grid">
-            <div class="field"><label>System Type</label>
+            <div class="field"><label>Mounting System</label>
                 <select id="sr-type">
                     <option value="H25">H25 Portrait (400mm)</option>
                     <option value="H60">H60 Portrait (400mm)</option>
@@ -101,7 +88,7 @@
             <div class="field"><label>Panel Qty</label><input type="number" id="sr-qty" value="6" min="1"></div>
             <div class="field"><label>Strings</label><input type="number" id="sr-strings" value="1" min="1"></div>
         </div>
-        <button class="btn-main" onclick="addSr()">Add to Project</button>
+        <button class="btn-add" onclick="addSr()">Add to Project</button>
     </div>
 
     <div class="card" id="bom-card" style="display:none;">
@@ -116,100 +103,83 @@
     </div>
 </div>
 
-<div id="flashOk" class="flash ok">Added to Project</div>
+<div id="flash" class="flash ok">Added to Project</div>
 
 <footer>EZ | BOM Systems © 2026 Norman Myburgh. All Rights Reserved.</footer>
 
 <script>
 let cart = {};
 
-// Hard-coded Stock Sequence for sorting
-const MASTER_SEQ = [
-    {c:'ER-R-AE/3600', d:'Aeri Rail, 40*3600mm'},
-    {c:'ER-R-AE/2400', d:'Aeri Rail, 40*2400mm'},
-    {c:'ER-ECAE/28-36/L50', d:'Universal end clamp 28-40mm Aeri'},
-    {c:'ER-IC-AE/30-40/L50', d:'Inter Clamp 30-40mm'},
-    {c:'WQ-TRE-3035-S', d:'Silver TR End Clamp'},
-    {c:'WQ-TRM-3035-S', d:'Silver TR Mid Clamp'},
-    {c:'WQ-TRπ-25-400', d:'H25 TR π MiniRail, 400mm'},
-    {c:'WQ-TRπ-60-400', d:'H60 TR π MiniRail, 400mm'},
-    {c:'WQ-TRU-30-120', d:'H30 TR U MiniRail, 120mm'},
-    {c:'EZ-GC-AE', d:'Grounding Clip for Aeri Rail'},
-    {c:'EZ-GL-U', d:'Universal Grounding Lug'},
-    {c:'WQ-TR-GL', d:'TR Grounding Lug'},
-    {c:'EZ-CC-PV/4', d:'Universal Cable Clip for PV Panels'}
+const SEQ = [
+  {c:'ER-R-AE/3600', d:'Aeri Rail, 40*3600mm'},
+  {c:'ER-R-AE/2400', d:'Aeri Rail, 40*2400mm'},
+  {c:'ER-ECAE/28-36/L50', d:'Universal end clamp 28-40mm Aeri'},
+  {c:'ER-IC-AE/30-40/L50', d:'Inter Clamp 30-40mm'},
+  {c:'WQ-TRE-3035-S', d:'Silver TR End Clamp'},
+  {c:'WQ-TRM-3035-S', d:'Silver TR Mid Clamp'},
+  {c:'WQ-TRπ-25-400', d:'H25 TR π MiniRail, 400mm'},
+  {c:'WQ-TRπ-60-400', d:'H60 TR π MiniRail, 400mm'},
+  {c:'WQ-TRU-30-120', d:'H30 TR U MiniRail, 120mm'},
+  {c:'EZ-GC-AE', d:'Grounding Clip for Aeri Rail'},
+  {c:'EZ-GL-U', d:'Universal Grounding Lug'},
+  {c:'WQ-TR-GL', d:'TR Grounding Lug'},
+  {c:'EZ-CC-PV/4', d:'Universal Cable Clip for PV Panels'}
 ];
 
 function rtUpdate() {
-    const qty = parseInt(document.getElementById('rt-qty').value);
-    const isP = document.getElementById('rt-orient').value === 'portrait';
-    if(!qty) return;
-    const run = ((isP?1134:2278)*qty) + (20*(qty-1)) + 80;
-    const r36 = Math.floor(run/3600);
-    const r24 = (run%3600 > 0) ? 1 : 0;
-    document.getElementById('rt-preview').innerHTML = `<strong>Run:</strong> ${run}mm &nbsp;|&nbsp; <strong>Rails:</strong> ${r36}x 3.6m + ${r24}x 2.4m`;
+  const q = parseInt(document.getElementById('rt-qty').value);
+  const isP = document.getElementById('rt-orient').value === 'portrait';
+  if(!q) return;
+  const run = ((isP?1134:2278)*q) + (20*(q-1)) + 80;
+  const r36 = Math.floor(run/3600);
+  const r24 = (run%3600 > 0) ? 1 : 0;
+  document.getElementById('rt-preview').innerHTML = `<strong>Run:</strong> ${run}mm | <strong>Rails:</strong> ${r36}x 3.6m + ${r24}x 2.4m`;
 }
 
+function updateCart(c, q){ cart[c] = (cart[c] || 0) + q; }
+
 function addRt(){
-    const qty = parseInt(document.getElementById('rt-qty').value);
-    const strings = parseInt(document.getElementById('rt-strings').value);
-    const isP = document.getElementById('rt-orient').value === 'portrait';
-    const run = ((isP?1134:2278)*qty) + (20*(qty-1)) + 80;
-    
-    updateCart('ER-R-AE/3600', Math.floor(run/3600)*2*strings);
-    updateCart('ER-R-AE/2400', (run%3600 > 0 ? 1 : 0)*2*strings);
-    updateCart('ER-ECAE/28-36/L50', 4*strings);
-    updateCart('ER-IC-AE/30-40/L50', (qty-1)*2*strings);
-    updateCart('EZ-GC-AE', (qty-1)*2*strings);
-    updateCart('EZ-GL-U', 2*strings);
-    updateCart('EZ-CC-PV/4', qty*strings);
-    finishAdd();
+  const q = parseInt(document.getElementById('rt-qty').value), s = parseInt(document.getElementById('rt-strings').value);
+  const isP = document.getElementById('rt-orient').value === 'portrait';
+  const run = ((isP?1134:2278)*q) + (20*(q-1)) + 80;
+  updateCart('ER-R-AE/3600', Math.floor(run/3600)*2*s);
+  updateCart('ER-R-AE/2400', (run%3600 > 0 ? 1 : 0)*2*s);
+  updateCart('ER-ECAE/28-36/L50', 4*s);
+  updateCart('ER-IC-AE/30-40/L50', (q-1)*2*s);
+  updateCart('EZ-GC-AE', (q-1)*2*s);
+  updateCart('EZ-GL-U', 2*s);
+  updateCart('EZ-CC-PV/4', q*s);
+  render();
 }
 
 function addSr(){
-    const type = document.getElementById('sr-type').value;
-    const qty = parseInt(document.getElementById('sr-qty').value);
-    const strings = parseInt(document.getElementById('sr-strings').value);
-    const railQty = ((qty-1)*2+4)*strings;
-
-    if(type==='H25') updateCart('WQ-TRπ-25-400', railQty);
-    else if(type==='H60') updateCart('WQ-TRπ-60-400', railQty);
-    else updateCart('WQ-TRU-30-120', railQty);
-
-    updateCart('WQ-TRE-3035-S', 4*strings);
-    updateCart('WQ-TRM-3035-S', (qty-1)*2*strings);
-    updateCart('WQ-TR-GL', 2*strings);
-    updateCart('EZ-CC-PV/4', qty*strings);
-    finishAdd();
+  const t = document.getElementById('sr-type').value, q = parseInt(document.getElementById('sr-qty').value), s = parseInt(document.getElementById('sr-strings').value);
+  const rQty = ((q-1)*2+4)*s;
+  if(t==='H25') updateCart('WQ-TRπ-25-400', rQty);
+  else if(t==='H60') updateCart('WQ-TRπ-60-400', rQty);
+  else updateCart('WQ-TRU-30-120', rQty);
+  updateCart('WQ-TRE-3035-S', 4*s);
+  updateCart('WQ-TRM-3035-S', (q-1)*2*s);
+  updateCart('WQ-TR-GL', 2*s);
+  updateCart('EZ-CC-PV/4', q*s);
+  render();
 }
 
-function updateCart(code, q){ cart[code] = (cart[code] || 0) + q; }
-
-function finishAdd(){
-    showFlash();
-    renderBOM();
+function render(){
+  const b = document.getElementById('bom-body'); b.innerHTML = '';
+  let items = false;
+  SEQ.forEach(item => {
+    if(cart[item.c] > 0){
+      items = true;
+      b.innerHTML += `<tr><td>${item.c}</td><td>${item.d}</td><td style="text-align:right"><span class="qty-pill">${cart[item.c]}</span></td></tr>`;
+    }
+  });
+  document.getElementById('bom-card').style.display = items ? 'block' : 'none';
+  const f = document.getElementById('flash'); f.classList.add('visible');
+  setTimeout(() => f.classList.remove('visible'), 2000);
 }
 
-function renderBOM(){
-    const body = document.getElementById('bom-body');
-    body.innerHTML = '';
-    let hasData = false;
-    MASTER_SEQ.forEach(item => {
-        if(cart[item.c] > 0){
-            hasData = true;
-            body.innerHTML += `<tr><td>${item.c}</td><td>${item.d}</td><td style="text-align:right"><span class="qty-pill">${cart[item.c]}</span></td></tr>`;
-        }
-    });
-    document.getElementById('bom-card').style.display = hasData ? 'block' : 'none';
-}
-
-function showFlash(){
-    const f = document.getElementById('flashOk');
-    f.classList.add('visible');
-    setTimeout(() => f.classList.remove('visible'), 2000);
-}
-
-function resetCart(){ cart = {}; renderBOM(); }
+function resetCart(){ cart = {}; render(); }
 rtUpdate();
 </script>
 </body>
