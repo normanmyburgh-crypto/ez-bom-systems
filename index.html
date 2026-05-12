@@ -2,185 +2,1010 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EZ|BOM — Structural Logic</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='28' cy='28' r='16' fill='white'/%3E%3Ccircle cx='72' cy='28' r='16' fill='white'/%3E%3Ccircle cx='72' cy='72' r='16' fill='white'/%3E%3Crect x='12' y='56' width='32' height='32' rx='3' fill='%23f97316'/%3E%3C/svg%3E">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EZ | BOM</title>
+<meta name="description" content="EZ-BOM — Solar Mounting Bill of Materials Generator">
+<meta name="theme-color" content="#1a1a1a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="EZ-BOM">
+
+<!-- ── FAVICON: icon only, transparent bg ── -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='30' cy='30' r='22' fill='white'/%3E%3Ccircle cx='70' cy='30' r='22' fill='white'/%3E%3Crect x='8' y='52' width='44' height='40' rx='4' fill='%23f97316'/%3E%3Ccircle cx='70' cy='72' r='22' fill='white'/%3E%3C/svg%3E">
+
+<!-- ── MOBILE HOME SCREEN ICON: icon on obsidian bg ── -->
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='38' fill='%231a1a1a'/%3E%3Ccircle cx='54' cy='54' r='38' fill='white'/%3E%3Ccircle cx='126' cy='54' r='38' fill='white'/%3E%3Crect x='16' y='92' width='76' height='72' rx='6' fill='%23f97316'/%3E%3Ccircle cx='126' cy='128' r='38' fill='white'/%3E%3C/svg%3E">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <style>
-  /* PRESERVING ORIGINAL CSS DNA */
-  :root {
-    --bg-main: #121212;
-    --bg-card: #1e1e1e;
-    --bg-input: #2a2a2a;
-    --accent-primary: #f97316; 
-    --accent-secondary: #00d4ff;
-    --text-primary: #f5f5f5;
-    --text-secondary: #b0b0b0;
-    --border: #333;
-    --ok: #4caf50;
-  }
-  
-  body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: var(--bg-main); color: var(--text-primary); padding: 20px; display: flex; flex-direction: column; align-items: center; }
-  header { width: 100%; max-width: 1000px; display: flex; align-items: center; gap: 15px; margin-bottom: 30px; }
-  .logo-svg { width: 45px; height: 45px; }
-  .logo-text { font-size: 1.8rem; letter-spacing: -0.5px; }
-  .logo-text b { font-weight: 800; }
-  .logo-text span { font-weight: 200; color: var(--text-secondary); }
+/* ══════════════════════════════════════════════════
+   RESET & DESIGN TOKENS
+══════════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#121212;--card:#1e1e1e;--card2:#252525;--card3:#2d2d2d;
+  --border:#2a2a2a;--border2:#383838;
+  --cyan:#00d4ff;      --cyan-d:rgba(0,212,255,.1);  --cyan-g:rgba(0,212,255,.2);
+  --lime:#32ff7e;      --lime-d:rgba(50,255,126,.1); --lime-g:rgba(50,255,126,.2);
+  --purple:#bb86fc;    --purp-d:rgba(187,134,252,.1);--purp-g:rgba(187,134,252,.2);
+  --orange:#f97316;
+  --success:#00e676;--danger:#ff5252;--warn:#ffb74d;
+  --tx1:#f0f0f0;--tx2:#a0a0a0;--tx3:#555;
+  --font:'Inter','Segoe UI',system-ui,sans-serif;
+  --r:8px;--r2:12px;--r3:14px;
+}
+body{background:var(--bg);color:var(--tx1);font-family:var(--font);min-height:100vh;display:flex;flex-direction:column}
 
-  .container { width: 100%; max-width: 1000px; display: grid; gap: 20px; }
-  .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
-  h2 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; color: var(--accent-secondary); margin: 0 0 20px 0; border-left: 3px solid var(--accent-primary); padding-left: 10px; }
-  
-  .input-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
-  .field { display: flex; flex-direction: column; gap: 8px; }
-  label { font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); }
-  
-  select, input { background: var(--bg-input); border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 8px; font-size: 0.9rem; outline: none; }
-  .preview-bar { background: rgba(0,212,255,0.05); border: 1px dashed var(--accent-secondary); padding: 12px; border-radius: 8px; font-size: 0.8rem; margin-top: 15px; display: flex; gap: 15px; }
-  
-  .btn-add { background: var(--accent-primary); color: #fff; border: none; padding: 14px; border-radius: 8px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 20px; }
-  
-  .bom-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-  .bom-table th { text-align: left; padding: 12px; color: var(--text-secondary); border-bottom: 2px solid var(--border); font-size: 0.7rem; text-transform: uppercase; }
-  .bom-table td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
-  .qty-pill { background: var(--accent-primary); color: #fff; padding: 2px 8px; border-radius: 4px; font-weight: bold; }
+/* ══ HEADER ══ */
+.hdr{background:var(--card);border-bottom:1px solid var(--border);padding:10px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;position:sticky;top:0;z-index:60}
+.hdr-logo{display:flex;align-items:center;gap:0}
+.hdr-logo svg{height:40px;width:auto}
+.hdr-status{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--tx3);background:var(--card2);border:1px solid var(--border);padding:5px 12px;border-radius:20px;white-space:nowrap}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--success);box-shadow:0 0 5px var(--success)}
 
-  .flash { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); padding: 12px 24px; border-radius: 8px; opacity: 0; transition: 0.3s; z-index: 100; font-weight: 600; }
-  .flash.visible { opacity: 1; }
-  .flash.ok { background: var(--ok); color: #fff; }
+/* ══ LAYOUT ══ */
+main{max-width:980px;margin:0 auto;padding:24px 18px 48px;flex:1;width:100%}
+.page-footer{text-align:center;padding:14px;color:#2a2a2a;font-size:10px;letter-spacing:.5px;border-top:1px solid #1e1e1e;user-select:none}
 
-  footer { text-align: center; padding: 60px 0 20px; font-size: 0.6rem; color: #222; }
+/* ══ FLASH MESSAGES ══ */
+.flash{padding:10px 16px;border-radius:var(--r);font-size:12px;margin-bottom:16px;display:none}
+.flash.show{display:block}
+.flash-err{background:rgba(255,82,82,.07);border:1px solid rgba(255,82,82,.2);color:#ff6b6b}
+.flash-ok {background:rgba(0,230,118,.07);border:1px solid rgba(0,230,118,.2);color:var(--success)}
+
+/* ══ MODE TABS ══ */
+.tabs{display:flex;background:var(--card);border:1px solid var(--border);border-radius:var(--r2);padding:4px;gap:4px;margin-bottom:18px;flex-wrap:wrap}
+.tab{flex:1;min-width:100px;padding:9px 10px;background:transparent;border:1px solid transparent;border-radius:9px;color:var(--tx3);font-size:11px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;cursor:pointer;transition:all .18s;display:flex;align-items:center;justify-content:center;gap:6px;font-family:var(--font)}
+.tab:hover:not(.active){background:var(--card2);color:var(--tx1)}
+.tab.active-a{background:var(--cyan-d);color:var(--cyan);border-color:var(--cyan)}
+.tab.active-b{background:var(--lime-d);color:var(--lime);border-color:var(--lime)}
+.tab.active-c{background:var(--purp-d);color:var(--purple);border-color:var(--purple)}
+
+/* ══ CONFIG CARDS ══ */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r3);padding:20px;margin-bottom:18px}
+.card-head{display:flex;align-items:center;gap:8px;margin-bottom:16px}
+.card-head .mode-pip{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.card-head h2{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--tx2)}
+
+/* ══ FORM GRID ══ */
+.fgrid{display:grid;gap:12px}
+.g2{grid-template-columns:1fr 1fr}
+.g3{grid-template-columns:1fr 1fr 1fr}
+.g4{grid-template-columns:1fr 1fr 1fr 1fr}
+.g5{grid-template-columns:repeat(5,1fr)}
+@media(max-width:700px){.g4,.g5{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1fr 1fr}}
+@media(max-width:440px){.g2,.g3,.g4,.g5{grid-template-columns:1fr}}
+
+.field label{display:block;font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--tx3);margin-bottom:6px}
+.field select,.field input{width:100%;padding:9px 12px;background:var(--card2);border:1px solid var(--border);border-radius:var(--r);color:var(--tx1);font-size:13px;font-family:var(--font);outline:none;transition:border-color .18s,box-shadow .18s;-webkit-appearance:none}
+.field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%23555' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;padding-right:30px;cursor:pointer}
+.field select option{background:#2a2a2a}
+.field input::placeholder{color:var(--tx3)}
+.field input[type=number]::-webkit-inner-spin-button{opacity:.3}
+/* focus ring per mode */
+.mode-a .field select:focus,.mode-a .field input:focus{border-color:var(--cyan);box-shadow:0 0 0 3px var(--cyan-d)}
+.mode-b .field select:focus,.mode-b .field input:focus{border-color:var(--lime);box-shadow:0 0 0 3px var(--lime-d)}
+.mode-c .field select:focus,.mode-c .field input:focus{border-color:var(--purple);box-shadow:0 0 0 3px var(--purp-d)}
+
+.divider{border:none;border-top:1px solid var(--border);margin:14px 0}
+.sub-lbl{font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--tx3);margin-bottom:9px}
+
+/* ══ RAIL LIVE PREVIEW ══ */
+.rail-preview{margin-top:12px;padding:9px 13px;background:var(--card2);border:1px solid var(--border);border-radius:var(--r);font-size:11px;color:var(--tx3);display:none;line-height:1.6}
+.rail-preview strong{color:var(--tx2)}
+
+/* ══ BUTTON ROW ══ */
+.btn-row{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+.btn{padding:10px 18px;border:none;border-radius:var(--r);font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;cursor:pointer;transition:opacity .18s,transform .1s;font-family:var(--font);white-space:nowrap;display:flex;align-items:center;justify-content:center;gap:6px}
+.btn:hover:not(:disabled){opacity:.84}
+.btn:active:not(:disabled){transform:scale(.98)}
+.btn:disabled{opacity:.3;cursor:not-allowed}
+.btn-gen-a{background:var(--cyan);color:#000;flex:1}
+.btn-gen-b{background:var(--lime);color:#000;flex:1}
+.btn-gen-c{background:var(--purple);color:#000;flex:1}
+.btn-add{background:var(--card2);color:var(--success);border:1px solid rgba(0,230,118,.28);flex:1}
+.btn-add:hover:not(:disabled){background:rgba(0,230,118,.07)}
+
+/* ══ BOM PREVIEW TABLE ══ */
+.bom-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r3);overflow:hidden;margin-bottom:18px}
+.bom-hdr{padding:13px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.bom-hdr h2{font-size:10px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase}
+.bom-badge{font-size:10px;color:var(--tx2);background:var(--card2);border:1px solid var(--border);padding:3px 10px;border-radius:20px}
+.bom-tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+thead th{padding:8px 18px;text-align:left;font-size:9px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;color:var(--tx3);background:var(--card2);border-bottom:1px solid var(--border);white-space:nowrap}
+thead th:last-child{text-align:right}
+tbody tr{border-bottom:1px solid var(--border);transition:background .12s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:rgba(255,255,255,.02)}
+tbody td{padding:10px 18px;font-size:12px;vertical-align:middle}
+tbody td:first-child{font-family:'Courier New',monospace;font-size:11px;white-space:nowrap}
+tbody td:nth-child(2){color:var(--tx2);font-size:11px}
+tbody td:last-child{text-align:right;white-space:nowrap}
+.cat-sep td{background:rgba(255,255,255,.025);font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--tx3);padding:5px 18px;pointer-events:none}
+.qty-pill{display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;min-width:38px;text-align:center}
+tfoot td{padding:9px 18px;font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--tx2);border-top:1px solid var(--border);background:var(--card2)}
+tfoot td:last-child{text-align:right}
+/* colour helpers */
+.ca{color:var(--cyan)}  .qa{background:var(--cyan-d);color:var(--cyan);border:1px solid var(--cyan-g)}
+.cb{color:var(--lime)}  .qb{background:var(--lime-d);color:var(--lime);border:1px solid var(--lime-g)}
+.cc{color:var(--purple)}.qc{background:var(--purp-d);color:var(--purple);border:1px solid var(--purp-g)}
+.cm{color:var(--warn)}  .qm{background:rgba(255,183,77,.1);color:var(--warn);border:1px solid rgba(255,183,77,.28)}
+.empty-bom{padding:44px 20px;text-align:center;color:var(--tx3);font-size:12px;line-height:2}
+.empty-bom svg{display:block;margin:0 auto 12px;opacity:.17}
+
+/* ══ PROJECT CART ══ */
+.cart-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r3);overflow:hidden;margin-bottom:18px}
+.cart-hdr{padding:13px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.cart-title{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--warn)}
+.cart-n{background:rgba(255,183,77,.1);color:var(--warn);border:1px solid rgba(255,183,77,.28);font-size:10px;font-weight:700;padding:2px 10px;border-radius:20px}
+.cart-actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.btn-clr{padding:6px 12px;background:transparent;border:1px solid var(--border2);border-radius:var(--r);color:var(--tx3);font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;cursor:pointer;font-family:var(--font);transition:all .15s}
+.btn-clr:hover{border-color:var(--danger);color:var(--danger)}
+.btn-pdf{padding:8px 14px;background:linear-gradient(135deg,#1e1e1e,#252525);border:1px solid var(--warn);border-radius:var(--r);color:var(--warn);font-size:11px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;cursor:pointer;font-family:var(--font);transition:all .18s;display:flex;align-items:center;gap:6px}
+.btn-pdf:hover:not(:disabled){background:rgba(255,183,77,.07)}
+.btn-pdf:disabled{opacity:.3;cursor:not-allowed}
+
+/* project fields */
+.proj-fields{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;padding:14px 20px;border-bottom:1px solid var(--border);background:var(--card2)}
+@media(max-width:600px){.proj-fields{grid-template-columns:1fr}}
+.proj-field label{display:block;font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--tx3);margin-bottom:6px}
+.proj-field input{width:100%;padding:8px 11px;background:var(--card);border:1px solid var(--border2);border-radius:var(--r);color:var(--tx1);font-size:13px;font-family:var(--font);outline:none;transition:border-color .18s}
+.proj-field input:focus{border-color:var(--warn);box-shadow:0 0 0 3px rgba(255,183,77,.09)}
+.proj-field input::placeholder{color:var(--tx3)}
+.req{color:var(--danger);font-size:13px;margin-left:1px}
+
+/* history */
+.hist-list{padding:10px 20px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:6px}
+.hist-item{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--tx2);padding:6px 10px;background:var(--card2);border-radius:7px;border:1px solid var(--border)}
+.hist-pip{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.hist-name{font-weight:700;color:var(--tx1)}
+.hist-desc{color:var(--tx3);font-size:10px}
+.hist-mult{font-size:10px;color:var(--tx3);margin-left:auto;white-space:nowrap}
+.hist-rm{background:none;border:none;color:var(--tx3);cursor:pointer;font-size:15px;line-height:1;padding:0 2px;transition:color .15s;flex-shrink:0}
+.hist-rm:hover{color:var(--danger)}
+.master-lbl{padding:10px 20px 8px;border-bottom:1px solid var(--border);font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--warn)}
 </style>
 </head>
 <body>
 
-<header>
-    <svg class="logo-svg" viewBox="0 0 100 100">
-        <circle cx="28" cy="28" r="16" fill="white"/><circle cx="72" cy="28" r="16" fill="white"/><circle cx="72" cy="72" r="16" fill="white"/>
-        <rect x="12" y="56" width="32" height="32" rx="3" fill="#f97316"/>
+<!-- ═══════════════════════════════ HEADER ═══════════════════════════════ -->
+<header class="hdr">
+  <!-- Full SVG logo matching ez-bom-logo.png -->
+  <div class="hdr-logo">
+    <svg viewBox="0 0 320 80" xmlns="http://www.w3.org/2000/svg" aria-label="EZ BOM">
+      <!-- 2×2 icon grid: top-left circle, top-right circle, bottom-left orange square, bottom-right circle -->
+      <circle cx="20" cy="20" r="16" fill="white"/>
+      <circle cx="44" cy="20" r="16" fill="white"/>
+      <rect   x="4"  y="36" width="30" height="30" rx="3" fill="#f97316"/>
+      <circle cx="44" cy="51" r="16" fill="white"/>
+      <!-- EZ bold -->
+      <text x="76" y="56" font-family="'Arial Black','Impact',Arial,sans-serif" font-weight="900" font-size="44" fill="white" letter-spacing="-1">EZ</text>
+      <!-- | thin separator -->
+      <text x="163" y="56" font-family="Arial,sans-serif" font-weight="100" font-size="44" fill="white" opacity=".6">|</text>
+      <!-- BOM thin -->
+      <text x="178" y="56" font-family="Arial,Helvetica,sans-serif" font-weight="300" font-size="44" fill="white" letter-spacing="1">BOM</text>
     </svg>
-    <div class="logo-text"><b>EZ</b><span> | BOM</span></div>
+  </div>
+  <div class="hdr-status">
+    <div class="dot"></div>
+    <span>Ready</span>
+  </div>
 </header>
 
-<div class="container">
-    <div class="card">
-        <h2>Rooftop Config (Aeri Rail)</h2>
-        <div class="input-grid">
-            <div class="field"><label>Orientation</label>
-                <select id="rt-orient" onchange="rtUpdate()"><option value="portrait">Portrait</option><option value="landscape">Landscape</option></select>
-            </div>
-            <div class="field"><label>Panel Qty</label><input type="number" id="rt-qty" value="6" min="1" oninput="rtUpdate()"></div>
-            <div class="field"><label>Strings</label><input type="number" id="rt-strings" value="1" min="1"></div>
-        </div>
-        <div id="rt-preview" class="preview-bar"></div>
-        <button class="btn-add" onclick="addRt()">Add to Project</button>
+<!-- ═══════════════════════════════ MAIN ═══════════════════════════════ -->
+<main>
+  <div class="flash flash-err" id="fErr"></div>
+  <div class="flash flash-ok"  id="fOk"></div>
+
+  <!-- MODE TABS -->
+  <div class="tabs">
+    <button class="tab active-a" id="tab-a" onclick="setMode('a')">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+      Standard Rooftop
+    </button>
+    <button class="tab" id="tab-b" onclick="setMode('b')">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="8" x2="21" y2="8"/><line x1="3" y1="16" x2="21" y2="16"/></svg>
+      Short Rail
+    </button>
+    <button class="tab" id="tab-c" onclick="setMode('c')">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+      Ground Mount
+    </button>
+  </div>
+
+  <!-- ══ MODE A: STANDARD ROOFTOP (AERI RAIL) ══ -->
+  <div class="card mode-a" id="card-a">
+    <div class="card-head">
+      <div class="mode-pip" style="background:var(--cyan)"></div>
+      <h2>Standard Rooftop — Aeri Rail System</h2>
     </div>
 
-    <div class="card">
-        <h2>Short Rail Config</h2>
-        <div class="input-grid">
-            <div class="field"><label>Mounting System</label>
-                <select id="sr-type">
-                    <option value="H25">H25 Portrait (400mm)</option>
-                    <option value="H60">H60 Portrait (400mm)</option>
-                    <option value="H30">Landscape H30 (120mm)</option>
-                </select>
-            </div>
-            <div class="field"><label>Panel Qty</label><input type="number" id="sr-qty" value="6" min="1"></div>
-            <div class="field"><label>Strings</label><input type="number" id="sr-strings" value="1" min="1"></div>
-        </div>
-        <button class="btn-add" onclick="addSr()">Add to Project</button>
+    <div class="sub-lbl">Array Details</div>
+    <div class="fgrid g5">
+      <div class="field"><label>Section Name</label><input type="text" id="a-name" placeholder="e.g. North Roof"></div>
+      <div class="field">
+        <label>Orientation</label>
+        <select id="a-orient" onchange="onAChange()">
+          <option value="portrait">Portrait</option>
+          <option value="landscape">Landscape</option>
+        </select>
+      </div>
+      <div class="field"><label>Panel Width (mm)</label><input type="number" id="a-pw" value="1134" min="500" max="2500" oninput="onAChange()"></div>
+      <div class="field"><label>Panel Height (mm)</label><input type="number" id="a-ph" value="1762" min="500" max="2500" oninput="onAChange()"></div>
+      <div class="field"><label>Panels per String</label><input type="number" id="a-qty" value="10" min="1" max="60" oninput="onAChange()"></div>
     </div>
 
-    <div class="card" id="bom-card" style="display:none;">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h2>Master Project BOM</h2>
-            <button style="width:auto; background:#444; padding:5px 10px; font-size:0.7rem;" onclick="resetCart()">Clear</button>
-        </div>
-        <table class="bom-table">
-            <thead><tr><th>Code</th><th>Description</th><th style="text-align:right">Qty</th></tr></thead>
-            <tbody id="bom-body"></tbody>
-        </table>
+    <div class="fgrid g4" style="margin-top:12px">
+      <div class="field"><label>Strings (×)</label><input type="number" id="a-strings" value="1" min="1" max="50" oninput="onAChange()"></div>
+      <div class="field">
+        <label>Roof Interface</label>
+        <select id="a-iface">
+          <option value="TH">Tile Hook</option>
+          <option value="IBR">IBR</option>
+          <option value="COR">Corrugated</option>
+          <option value="KL">Kliplok</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>End Clamp</label>
+        <select id="a-ec">
+          <option value="ER-ECAE/28-36/L50">Universal 28–40mm</option>
+          <option value="ER-EC-ST30/L50">Standard 30mm</option>
+          <option value="ER-EC-ST35/L50">Standard 35mm</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Mid Clamp</label>
+        <select id="a-mc">
+          <option value="ER-IC-AE/30-40/L50">Aeri 30–40mm L50</option>
+        </select>
+      </div>
     </div>
-</div>
 
-<div id="flash" class="flash ok">Added to Project</div>
+    <div class="rail-preview" id="a-preview"></div>
 
-<footer>EZ | BOM Systems © 2026 Norman Myburgh. All Rights Reserved.</footer>
+    <div class="btn-row">
+      <button class="btn btn-gen-a" onclick="genA()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        Generate BOM
+      </button>
+      <button class="btn btn-add" onclick="addToProject()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add to Project
+      </button>
+    </div>
+  </div>
 
+  <!-- ══ MODE B: SHORT RAIL (MINI-RAIL) ══ -->
+  <div class="card mode-b" id="card-b" style="display:none">
+    <div class="card-head">
+      <div class="mode-pip" style="background:var(--lime)"></div>
+      <h2>Short Rail — Mini-Rail System</h2>
+    </div>
+
+    <div class="fgrid g4">
+      <div class="field"><label>Section Name</label><input type="text" id="b-name" placeholder="e.g. Garage East"></div>
+      <div class="field">
+        <label>Rail Type</label>
+        <select id="b-type">
+          <option value="H25">Portrait H25 (WQ-TRπ-25-400)</option>
+          <option value="H60">Portrait H60 (WQ-TRπ-60-400)</option>
+          <option value="H30">Landscape H30 (WQ-TRU-30-120)</option>
+        </select>
+      </div>
+      <div class="field"><label>Panels per String</label><input type="number" id="b-qty" value="6" min="1" max="60"></div>
+      <div class="field"><label>Strings (×)</label><input type="number" id="b-strings" value="1" min="1" max="50"></div>
+    </div>
+    <p style="font-size:11px;color:var(--tx3);margin-top:10px">Clamp type is fixed to Universal for all Mini-Rail configurations.</p>
+
+    <div class="btn-row">
+      <button class="btn btn-gen-b" onclick="genB()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        Generate BOM
+      </button>
+      <button class="btn btn-add" onclick="addToProject()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add to Project
+      </button>
+    </div>
+  </div>
+
+  <!-- ══ MODE C: GROUND MOUNT ══ -->
+  <div class="card mode-c" id="card-c" style="display:none">
+    <div class="card-head">
+      <div class="mode-pip" style="background:var(--purple)"></div>
+      <h2>Ground Mount — Fixed Table System</h2>
+    </div>
+    <p style="font-size:11px;color:var(--tx3);margin-bottom:14px">Clamps and hardware are fixed per table type. Quantities scale by number of tables.</p>
+
+    <div class="fgrid g3">
+      <div class="field"><label>Section Name</label><input type="text" id="c-name" placeholder="e.g. East Field"></div>
+      <div class="field">
+        <label>Table Size</label>
+        <select id="c-size">
+          <option value="12">12-Panel Table</option>
+          <option value="18">18-Panel Table</option>
+        </select>
+      </div>
+      <div class="field"><label>Number of Tables</label><input type="number" id="c-tables" value="1" min="1" max="100"></div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-gen-c" onclick="genC()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        Generate BOM
+      </button>
+      <button class="btn btn-add" onclick="addToProject()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add to Project
+      </button>
+    </div>
+  </div>
+
+  <!-- ══ BOM PREVIEW ══ -->
+  <div class="bom-card">
+    <div class="bom-hdr">
+      <h2 id="bom-title" class="ca">BOM Preview</h2>
+      <span class="bom-badge" id="bom-count">—</span>
+    </div>
+    <div id="bom-body">
+      <div class="empty-bom">
+        <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/></svg>
+        Configure above and click <strong style="color:#666">Generate BOM</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PROJECT CART ══ -->
+  <div class="cart-card" id="cart" style="display:none">
+    <div class="cart-hdr">
+      <span class="cart-title">Project Cart</span>
+      <span class="cart-n" id="cart-n">0</span>
+      <div class="cart-actions">
+        <button class="btn-clr" onclick="clearProject()">Clear All</button>
+        <button class="btn-pdf" id="btn-pdf" onclick="doPDF()" disabled>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="12" y2="12"/><line x1="15" y1="15" x2="12" y2="12"/></svg>
+          Download PDF
+        </button>
+      </div>
+    </div>
+
+    <!-- Project info fields -->
+    <div class="proj-fields">
+      <div class="proj-field">
+        <label>Project Name <span class="req">*</span></label>
+        <input type="text" id="pj-name"   placeholder="e.g. Greenfield Farm" oninput="checkPDF()">
+      </div>
+      <div class="proj-field">
+        <label>Client Name <span class="req">*</span></label>
+        <input type="text" id="pj-client" placeholder="e.g. Acme Solar Ltd"  oninput="checkPDF()">
+      </div>
+      <div class="proj-field">
+        <label>Sales Person <span class="req">*</span></label>
+        <input type="text" id="pj-sales"  placeholder="e.g. Jane Smith"      oninput="checkPDF()">
+      </div>
+    </div>
+
+    <!-- History log -->
+    <div class="hist-list" id="hist-list"></div>
+
+    <!-- Master BOM -->
+    <div class="master-lbl">Consolidated Master BOM</div>
+    <div id="master-body"></div>
+  </div>
+
+</main>
+
+<footer class="page-footer">EZ | BOM Systems © 2026 Norman Myburgh. All Rights Reserved.</footer>
+
+<!-- ═══════════════════════════════ SCRIPT ═══════════════════════════════ -->
 <script>
-let cart = {};
+'use strict';
+/*══════════════════════════════════════════════════
+  EZ-BOM 2.0 — LOGIC ENGINE
+  All calculations hard-coded. No external API.
+══════════════════════════════════════════════════*/
 
-const SEQ = [
-  {c:'ER-R-AE/3600', d:'Aeri Rail, 40*3600mm'},
-  {c:'ER-R-AE/2400', d:'Aeri Rail, 40*2400mm'},
-  {c:'ER-ECAE/28-36/L50', d:'Universal end clamp 28-40mm Aeri'},
-  {c:'ER-IC-AE/30-40/L50', d:'Inter Clamp 30-40mm'},
-  {c:'WQ-TRE-3035-S', d:'Silver TR End Clamp'},
-  {c:'WQ-TRM-3035-S', d:'Silver TR Mid Clamp'},
-  {c:'WQ-TRπ-25-400', d:'H25 TR π MiniRail, 400mm'},
-  {c:'WQ-TRπ-60-400', d:'H60 TR π MiniRail, 400mm'},
-  {c:'WQ-TRU-30-120', d:'H30 TR U MiniRail, 120mm'},
-  {c:'EZ-GC-AE', d:'Grounding Clip for Aeri Rail'},
-  {c:'EZ-GL-U', d:'Universal Grounding Lug'},
-  {c:'WQ-TR-GL', d:'TR Grounding Lug'},
-  {c:'EZ-CC-PV/4', d:'Universal Cable Clip for PV Panels'}
-];
+/* ── CATALOGUE ──────────────────────────────── */
+const CAT = {
+  /* Aeri Rails */
+  'ER-R-AE/3600': { desc:'Aeri Rail, 40×3600mm',             cat:'Rail' },
+  'ER-R-AE/2400': { desc:'Aeri Rail, 40×2400mm',             cat:'Rail' },
+  /* Splices */
+  'ER-SP-AE':     { desc:'Splice for Aeri Rail',              cat:'Splice' },
+  /* Interfaces */
+  'ER-TH':        { desc:'Tile Hook Interface for Aeri Rail', cat:'Interface' },
+  'ER-IBR':       { desc:'IBR Interface for Aeri Rail',       cat:'Interface' },
+  'ER-COR':       { desc:'Corrugated Interface for Aeri Rail',cat:'Interface' },
+  'ER-KL-31':     { desc:'Kliplok Interface for Aeri Rail',   cat:'Interface' },
+  /* Clamps — Aeri */
+  'ER-IC-AE/30-40/L50':  { desc:'Aeri Rail Inter Clamp 30–40mm, L50',    cat:'MidClamp' },
+  'ER-ECAE/28-36/L50':   { desc:'Aeri End Clamp Universal 28–40mm, L50', cat:'EndClamp' },
+  'ER-EC-ST30/L50':      { desc:'Aeri End Clamp Standard 30mm, L50',     cat:'EndClamp' },
+  'ER-EC-ST35/L50':      { desc:'Aeri End Clamp Standard 35mm, L50',     cat:'EndClamp' },
+  /* Rail Clamp (foot clamp) */
+  'ER-RC-AE':     { desc:'Rail Clamp for Aeri Rail with Nut', cat:'RailClamp' },
+  /* Ground Mount — Purlins */
+  'WQ-LTX-C60':         { desc:'Wochn C60 Purlin 5000mm',          cat:'Rail' },
+  'WQ-LTX-C60-2100MM':  { desc:'Wochn C60 Purlin 2100mm',          cat:'Rail' },
+  'WQ-LTX-C60-5500MM':  { desc:'Wochn C60 Purlin 5500mm',          cat:'Rail' },
+  /* Ground Mount — Splice */
+  'WQ-SK-C60':    { desc:'Wochn C60 Splice Kit',                   cat:'Splice' },
+  /* Ground Mount — Interface */
+  'WQ-CRX-CA60':  { desc:'Wochn C Rail Fix Adapter (L-Bracket)',    cat:'Interface' },
+  /* Ground Mount — Back Strength */
+  'WQ-SKX-L45':   { desc:'Wochn Back Strength Kit L45 3110mm',      cat:'Interface' },
+  /* Ground Mount — Support Legs */
+  'WQ-SC-2P-20-800': { desc:'Wochn SC Support Leg 20° 800mm',       cat:'Interface' },
+  /* Ground Mount — Clamps */
+  'WQ-CE-3035':   { desc:'Wochn CP End Clamp 30 & 35',              cat:'EndClamp' },
+  'WQ-CM-3035':   { desc:'Wochn CP Mid Clamp 30 & 35',              cat:'MidClamp' },
+  /* Mini-Rail — Rails */
+  'WQ-TRP-25-400':{ desc:'H25 TR-P MiniRail 400mm (Portrait)',       cat:'Rail' },
+  'WQ-TRP-60-400':{ desc:'H60 TR-P MiniRail 400mm (Portrait)',       cat:'Rail' },
+  'WQ-TRU-30-120':{ desc:'H30 TR-U MiniRail 120mm (Landscape)',      cat:'Rail' },
+  /* Mini-Rail — Clamps */
+  'WQ-TRE-3035-S':{ desc:'WQ End Clamp Universal 30–35mm Short',     cat:'EndClamp' },
+  'WQ-TRM-3035-S':{ desc:'WQ Mid Clamp Universal 30–35mm Short',     cat:'MidClamp' },
+  /* Mini-Rail — Lug */
+  'WQ-TR-GL':     { desc:'WQ Mini-Rail Grounding Lug',               cat:'GroundLug' },
+  /* Grounding & Clips */
+  'EZ-GC-AE':     { desc:'Grounding Clip II for Aeri Rail',          cat:'GroundClip' },
+  'EZ-GC-ST':     { desc:'Grounding Clip with Clenergy Logo',        cat:'GroundClip' },
+  'EZ-GL-U':      { desc:'Universal Grounding Lug',                  cat:'GroundLug'  },
+  'EZ-CC-PV/4':   { desc:'Universal Cable Clip for PV Panels',       cat:'CableClip'  },
+};
 
-function rtUpdate() {
-  const q = parseInt(document.getElementById('rt-qty').value);
-  const isP = document.getElementById('rt-orient').value === 'portrait';
-  if(!q) return;
-  const run = ((isP?1134:2278)*q) + (20*(q-1)) + 80;
-  const r36 = Math.floor(run/3600);
-  const r24 = (run%3600 > 0) ? 1 : 0;
-  document.getElementById('rt-preview').innerHTML = `<strong>Run:</strong> ${run}mm | <strong>Rails:</strong> ${r36}x 3.6m + ${r24}x 2.4m`;
+/* ── SORT ORDER (exact spreadsheet sequence) ── */
+const CAT_WEIGHT = {
+  'Rail':10, 'Splice':20, 'Interface':30,
+  'RailClamp':38, 'MidClamp':40, 'EndClamp':50,
+  'GroundClip':60, 'CableClip':70, 'GroundLug':80
+};
+function catW(cat){ return CAT_WEIGHT[cat] ?? 99; }
+
+/* ── RAIL OPTIMISER: 3600 + 2400 only ──────── */
+function optimiseRails(runPerLine){
+  /* Greedy: maximise 3600s, fill remainder with 2400s. Minimise pieces. */
+  let best = null;
+  const max36 = Math.floor(runPerLine / 3600) + 2;
+  for(let n36 = max36; n36 >= 0; n36--){
+    const rem = runPerLine - n36 * 3600;
+    if(rem < 0) continue;
+    const n24 = rem > 0 ? Math.ceil(rem / 2400) : 0;
+    const total = n36 * 3600 + n24 * 2400;
+    const pieces = n36 + n24;
+    if(total >= runPerLine){
+      if(!best || pieces < best.pieces || (pieces === best.pieces && total < best.total)){
+        best = { pieces, total, n36, n24 };
+      }
+    }
+  }
+  return best || { n36:0, n24:1 };
 }
 
-function updateCart(c, q){ cart[c] = (cart[c] || 0) + q; }
-
-function addRt(){
-  const q = parseInt(document.getElementById('rt-qty').value), s = parseInt(document.getElementById('rt-strings').value);
-  const isP = document.getElementById('rt-orient').value === 'portrait';
-  const run = ((isP?1134:2278)*q) + (20*(q-1)) + 80;
-  updateCart('ER-R-AE/3600', Math.floor(run/3600)*2*s);
-  updateCart('ER-R-AE/2400', (run%3600 > 0 ? 1 : 0)*2*s);
-  updateCart('ER-ECAE/28-36/L50', 4*s);
-  updateCart('ER-IC-AE/30-40/L50', (q-1)*2*s);
-  updateCart('EZ-GC-AE', (q-1)*2*s);
-  updateCart('EZ-GL-U', 2*s);
-  updateCart('EZ-CC-PV/4', q*s);
-  render();
+function buildRailItems(runPerLine, strings){
+  const doubled = runPerLine * 2;
+  let n36t, n24t; // totals across both lines
+  if(doubled <= 2400){ n36t = 0; n24t = 1; }
+  else if(doubled <= 3600){ n36t = 1; n24t = 0; }
+  else {
+    const { n36, n24 } = optimiseRails(runPerLine);
+    n36t = n36 * 2; n24t = n24 * 2;
+  }
+  const items = [];
+  if(n36t) items.push({ code:'ER-R-AE/3600', qty: n36t * strings });
+  if(n24t) items.push({ code:'ER-R-AE/2400', qty: n24t * strings });
+  return items;
 }
 
-function addSr(){
-  const t = document.getElementById('sr-type').value, q = parseInt(document.getElementById('sr-qty').value), s = parseInt(document.getElementById('sr-strings').value);
-  const rQty = ((q-1)*2+4)*s;
-  if(t==='H25') updateCart('WQ-TRπ-25-400', rQty);
-  else if(t==='H60') updateCart('WQ-TRπ-60-400', rQty);
-  else updateCart('WQ-TRU-30-120', rQty);
-  updateCart('WQ-TRE-3035-S', 4*s);
-  updateCart('WQ-TRM-3035-S', (q-1)*2*s);
-  updateCart('WQ-TR-GL', 2*s);
-  updateCart('EZ-CC-PV/4', q*s);
-  render();
+/* ── SPLICE FORMULA: floor((n-1)/3)×2 ────── */
+function calcSplices(n){ return Math.floor((n - 1) / 3) * 2; }
+
+/* ── INTERFACE: 1 per 600mm rail, min 4/panel landscape ── */
+function calcIface(runPerLine, qty, isLandscape){
+  const perLine = Math.max(Math.ceil(runPerLine / 600), 2);
+  const landscapeMin = isLandscape ? qty * 4 : 0; // 4 per panel landscape
+  return Math.max(perLine, landscapeMin / 2) * 2; // × 2 lines
 }
 
-function render(){
-  const b = document.getElementById('bom-body'); b.innerHTML = '';
-  let items = false;
-  SEQ.forEach(item => {
-    if(cart[item.c] > 0){
-      items = true;
-      b.innerHTML += `<tr><td>${item.c}</td><td>${item.d}</td><td style="text-align:right"><span class="qty-pill">${cart[item.c]}</span></td></tr>`;
+const IFACE_CODE = { TH:'ER-TH', IBR:'ER-IBR', COR:'ER-COR', KL:'ER-KL-31' };
+
+/* ── BOM SORT ───────────────────────────────── */
+function sortBOM(bom){
+  return [...bom].sort((a, b) => {
+    const wa = catW(CAT[a.code]?.cat ?? 'Other');
+    const wb = catW(CAT[b.code]?.cat ?? 'Other');
+    if(wa !== wb) return wa - wb;
+    return a.code.localeCompare(b.code);
+  });
+}
+
+/* ═══════════════════════════════════════════════
+   MODE A — STANDARD ROOFTOP
+═══════════════════════════════════════════════ */
+function genA(){
+  const isLand   = document.getElementById('a-orient').value === 'landscape';
+  const pw       = parseFloat(document.getElementById('a-pw').value)      || 1134;
+  const ph       = parseFloat(document.getElementById('a-ph').value)      || 1762;
+  const qty      = parseInt(document.getElementById('a-qty').value)       || 1;
+  const strings  = parseInt(document.getElementById('a-strings').value)   || 1;
+  const ifaceKey = document.getElementById('a-iface').value;
+  const ecCode   = document.getElementById('a-ec').value;
+  const mcCode   = document.getElementById('a-mc').value;
+  const totalPan = qty * strings;
+
+  /* Dimension along rail direction */
+  const dim    = isLand ? ph : pw;
+  const runPL  = dim * qty + 20 * (qty - 1) + 80;
+
+  /* Rails */
+  const railItems = buildRailItems(runPL, strings);
+
+  /* Splices: per-line segments - 1, × 2 lines, × strings */
+  const splicePerStr = calcSplices(qty);
+  /* Interfaces */
+  const ifaceQty = calcIface(runPL, qty, isLand) * strings;
+  const ifCode   = IFACE_CODE[ifaceKey];
+  /* Rail clamps: 2 per interface foot */
+  const rcQty    = ifaceQty * 2;
+
+  /* Clamps */
+  const midQty = (qty - 1) * 2 * strings;
+  const endQty = 4 * strings; // 2 ends × 2 rail lines
+
+  /* Mandatory add-ons */
+  const gcQty   = midQty;               // grounding clips = mid count
+  const ccQty   = totalPan;             // 1 per panel
+  const lugQty  = 2 * strings;          // 2 per string
+
+  const bom = [];
+  railItems.forEach(r => bom.push({ code:r.code, qty:r.qty }));
+  if(splicePerStr > 0) bom.push({ code:'ER-SP-AE',      qty: splicePerStr * strings });
+  bom.push({ code: ifCode,   qty: ifaceQty });
+  bom.push({ code:'ER-RC-AE', qty: rcQty });
+  if(midQty > 0) bom.push({ code: mcCode,   qty: midQty });
+  bom.push({ code: ecCode,   qty: endQty });
+  if(gcQty  > 0) bom.push({ code:'EZ-GC-AE', qty: gcQty });
+  bom.push({ code:'EZ-CC-PV/4', qty: ccQty });
+  bom.push({ code:'EZ-GL-U',    qty: lugQty });
+
+  const sorted = sortBOM(bom);
+  const label  = `${qty}p ${isLand?'Landscape':'Portrait'} (${document.getElementById('a-iface').selectedOptions[0].text}) ×${strings}`;
+  setLastBOM(sorted, label, 'a', document.getElementById('a-name').value.trim() || 'Unnamed');
+
+  /* Live preview update */
+  showRailPreview(runPL, railItems, ifaceQty, strings);
+  renderPreview(sorted, `${isLand?'Landscape':'Portrait'} Rooftop BOM`, 'ca', 'qa');
+}
+
+function onAChange(){
+  const isLand = document.getElementById('a-orient').value === 'landscape';
+  const pw  = parseFloat(document.getElementById('a-pw').value)  || 1134;
+  const ph  = parseFloat(document.getElementById('a-ph').value)  || 1762;
+  const qty = parseInt(document.getElementById('a-qty').value)   || 1;
+  const dim = isLand ? ph : pw;
+  const runPL = dim * qty + 20 * (qty - 1) + 80;
+  const { n36, n24 } = optimiseRails(runPL);
+  const doubled = runPL * 2;
+  let railStr = '';
+  if(doubled <= 3600){
+    railStr = doubled <= 2400 ? '1 × 2400mm (covers both lines)' : '1 × 3600mm (covers both lines)';
+  } else {
+    const t36 = n36*2, t24 = n24*2;
+    railStr = [t36 && `${t36} × 3600mm`, t24 && `${t24} × 2400mm`].filter(Boolean).join(' + ');
+  }
+  const p = document.getElementById('a-preview');
+  p.style.display = '';
+  p.innerHTML = `<strong>Rail run:</strong> ${runPL}mm/line &nbsp;|&nbsp; <strong>Rails:</strong> ${railStr} &nbsp;|&nbsp; <strong>Splices:</strong> ${calcSplices(qty) > 0 ? calcSplices(qty) + ' pair' : 'none'}`;
+}
+
+function showRailPreview(runPL, railItems, ifQty, strings){
+  const railStr = railItems.map(r => `${r.qty/strings*strings}×${CAT[r.code]?.desc?.match(/\d+mm/)?.[0]}`).join(' + ');
+  const p = document.getElementById('a-preview');
+  p.style.display = '';
+  p.innerHTML = `<strong>Rail run:</strong> ${runPL}mm/line &nbsp;|&nbsp; <strong>Rails:</strong> ${railStr} &nbsp;|&nbsp; <strong>Interfaces:</strong> ${ifQty}`;
+}
+
+/* ═══════════════════════════════════════════════
+   MODE B — SHORT RAIL (MINI-RAIL)
+═══════════════════════════════════════════════ */
+const MR_CODES = {
+  H25:{ code:'WQ-TRP-25-400', desc:'H25 TR-P MiniRail 400mm (Portrait)' },
+  H60:{ code:'WQ-TRP-60-400', desc:'H60 TR-P MiniRail 400mm (Portrait)' },
+  H30:{ code:'WQ-TRU-30-120', desc:'H30 TR-U MiniRail 120mm (Landscape)' },
+};
+
+function genB(){
+  const type    = document.getElementById('b-type').value;
+  const qty     = parseInt(document.getElementById('b-qty').value)    || 1;
+  const strings = parseInt(document.getElementById('b-strings').value)|| 1;
+  const totalPan = qty * strings;
+
+  /* Quantities per string */
+  const mids    = (qty - 1) * 2;
+  const ends    = 4;
+  const totalMR = (mids + ends) * strings;
+  const midQty  = mids * strings;
+  const endQty  = ends * strings;
+  const ccQty   = totalPan;       // 1 per panel
+  const lugQty  = 2 * strings;   // 2 per string (WQ-TR-GL)
+
+  const mrCode = MR_CODES[type].code;
+  const bom = [
+    { code: mrCode,          qty: totalMR },
+    { code:'WQ-TRM-3035-S', qty: midQty  },
+    { code:'WQ-TRE-3035-S', qty: endQty  },
+    { code:'EZ-CC-PV/4',    qty: ccQty   },
+    { code:'WQ-TR-GL',      qty: lugQty  },
+  ].filter(i => i.qty > 0);
+
+  const sorted = sortBOM(bom);
+  const label  = `${qty}p ${MR_CODES[type].desc.split(' ')[0]} Mini-Rail ×${strings}`;
+  setLastBOM(sorted, label, 'b', document.getElementById('b-name').value.trim() || 'Unnamed');
+  renderPreview(sorted, 'Short Rail (Mini-Rail) BOM', 'cb', 'qb');
+}
+
+/* ═══════════════════════════════════════════════
+   MODE C — GROUND MOUNT (FIXED TABLES)
+   From MOUNTING CONFIG sheet (exact quantities)
+═══════════════════════════════════════════════ */
+const GM_TEMPLATES = {
+  12: [
+    /* Rails / Purlins */
+    { code:'WQ-LTX-C60',        qty:4  }, // 5000mm
+    { code:'WQ-LTX-C60-2100MM', qty:4  }, // 2100mm
+    /* Splices */
+    { code:'WQ-SK-C60',         qty:4  },
+    /* Interfaces / L-Brackets */
+    { code:'WQ-CRX-CA60',       qty:12 },
+    { code:'WQ-SKX-L45',        qty:4  },
+    { code:'WQ-SC-2P-20-800',   qty:3  },
+    /* Clamps */
+    { code:'WQ-CM-3035',        qty:20 },
+    { code:'WQ-CE-3035',        qty:8  },
+    /* Grounding */
+    { code:'EZ-GC-ST',          qty:20 },
+    { code:'EZ-CC-PV/4',        qty:12 },
+    { code:'EZ-GL-U',           qty:4  },
+  ],
+  18: [
+    /* Rails / Purlins */
+    { code:'WQ-LTX-C60',        qty:4  }, // 5000mm
+    { code:'WQ-LTX-C60-5500MM', qty:4  }, // 5500mm
+    /* Splices */
+    { code:'WQ-SK-C60',         qty:4  },
+    /* Interfaces / L-Brackets */
+    { code:'WQ-CRX-CA60',       qty:16 },
+    { code:'WQ-SKX-L45',        qty:4  },
+    { code:'WQ-SC-2P-20-800',   qty:4  },
+    /* Clamps */
+    { code:'WQ-CM-3035',        qty:32 },
+    { code:'WQ-CE-3035',        qty:8  },
+    /* Grounding */
+    { code:'EZ-GC-ST',          qty:32 },
+    { code:'EZ-CC-PV/4',        qty:18 },
+    { code:'EZ-GL-U',           qty:4  },
+  ],
+};
+
+function genC(){
+  const size   = parseInt(document.getElementById('c-size').value)   || 12;
+  const tables = parseInt(document.getElementById('c-tables').value) || 1;
+  const tpl    = GM_TEMPLATES[size];
+
+  const bom = tpl.map(item => ({ code:item.code, qty: Math.ceil(item.qty * tables) }));
+  /* Ground mount templates are already in spreadsheet order — preserve that order,
+     but still run through sortBOM to handle multi-mode consolidation later */
+  const sorted = sortBOM(bom);
+  const label  = `${size}-Panel Ground Mount ×${tables}`;
+  setLastBOM(sorted, label, 'c', document.getElementById('c-name').value.trim() || 'Unnamed');
+  renderPreview(sorted, `${size}-Panel Ground Mount BOM`, 'cc', 'qc');
+}
+
+/* ═══════════════════════════════════════════════
+   RENDER BOM TABLE
+═══════════════════════════════════════════════ */
+function renderPreview(bom, title, colClass, qClass){
+  document.getElementById('bom-title').textContent = title;
+  document.getElementById('bom-title').className   = colClass;
+  document.getElementById('bom-count').textContent = bom.length + ' items';
+
+  let html = '<div class="bom-tbl-wrap"><table><thead><tr><th style="width:150px">Stock Code</th><th>Description</th><th style="width:90px">Qty</th></tr></thead><tbody>';
+  let lastCat = null, total = 0;
+  bom.forEach(item => {
+    const info = CAT[item.code] || { desc: item.code, cat:'Other' };
+    if(info.cat !== lastCat){
+      html += `<tr class="cat-sep"><td colspan="3">${catLabel(info.cat)}</td></tr>`;
+      lastCat = info.cat;
+    }
+    total += item.qty;
+    html += `<tr><td class="${colClass}">${esc(item.code)}</td><td>${esc(info.desc)}</td><td><span class="qty-pill ${qClass}">${item.qty}</span></td></tr>`;
+  });
+  html += `</tbody><tfoot><tr><td colspan="2">${bom.length} line items</td><td>${total} total</td></tr></tfoot></table></div>`;
+  document.getElementById('bom-body').innerHTML = html;
+}
+
+function catLabel(cat){
+  const L = { Rail:'Rails & Purlins', Splice:'Splices', Interface:'Interfaces & Brackets', RailClamp:'Rail Clamps', MidClamp:'Mid Clamps', EndClamp:'End Clamps', GroundClip:'Grounding Clips', CableClip:'Cable Clips', GroundLug:'Grounding Lugs' };
+  return L[cat] || cat;
+}
+
+/* ═══════════════════════════════════════════════
+   PROJECT CART STATE
+═══════════════════════════════════════════════ */
+let lastBOM  = [];   // current preview [{code,qty}]
+let lastMeta = {};   // {label, mode, sectionName}
+let history  = [];   // [{label, mode, sectionName, bom[]}]
+let master   = [];   // [{code,qty}] consolidated, ordered
+
+function setLastBOM(bom, label, mode, sectionName){
+  lastBOM  = bom;
+  lastMeta = { label, mode, sectionName };
+}
+
+function addToProject(){
+  if(!lastBOM.length){ flash('err','Generate a BOM first.'); return; }
+  const entry = { ...lastMeta, bom: lastBOM.map(i=>({...i})) };
+  history.push(entry);
+
+  /* Accumulate into master — preserve first-seen order */
+  entry.bom.forEach(item => {
+    const ex = master.find(m => m.code === item.code);
+    if(ex){ ex.qty += item.qty; }
+    else   { master.push({ code:item.code, qty:item.qty }); }
+  });
+
+  renderCart();
+  flash('ok', `"${entry.sectionName}" added to project cart.`);
+}
+
+function removeFromProject(idx){
+  const entry = history[idx];
+  if(!entry) return;
+  entry.bom.forEach(item => {
+    const i = master.findIndex(m => m.code === item.code);
+    if(i !== -1){
+      master[i].qty -= item.qty;
+      if(master[i].qty <= 0) master.splice(i, 1);
     }
   });
-  document.getElementById('bom-card').style.display = items ? 'block' : 'none';
-  const f = document.getElementById('flash'); f.classList.add('visible');
-  setTimeout(() => f.classList.remove('visible'), 2000);
+  history.splice(idx, 1);
+  renderCart();
 }
 
-function resetCart(){ cart = {}; render(); }
-rtUpdate();
+function clearProject(){
+  history = []; master = [];
+  document.getElementById('cart').style.display = 'none';
+}
+
+function renderCart(){
+  const cartEl = document.getElementById('cart');
+  if(!history.length){ cartEl.style.display = 'none'; return; }
+  cartEl.style.display = '';
+  const n = history.length;
+  document.getElementById('cart-n').textContent = n + (n===1?' array':' arrays');
+
+  /* History list */
+  const modeClr = { a:'var(--cyan)', b:'var(--lime)', c:'var(--purple)' };
+  document.getElementById('hist-list').innerHTML = history.map((e,i) => `
+    <div class="hist-item">
+      <div class="hist-pip" style="background:${modeClr[e.mode]}"></div>
+      <span class="hist-name">${esc(e.sectionName)}</span>
+      <span class="hist-desc">${esc(e.label)}</span>
+      <button class="hist-rm" onclick="removeFromProject(${i})">×</button>
+    </div>`).join('');
+
+  /* Master BOM — sort the accumulated array */
+  const sorted = sortBOM(master);
+  let lastCat = null, grand = 0;
+  let rows = '';
+  sorted.forEach(item => {
+    const info = CAT[item.code] || { desc:item.code, cat:'Other' };
+    if(info.cat !== lastCat){
+      rows += `<tr class="cat-sep"><td colspan="3">${catLabel(info.cat)}</td></tr>`;
+      lastCat = info.cat;
+    }
+    grand += item.qty;
+    rows += `<tr><td class="cm">${esc(item.code)}</td><td>${esc(info.desc)}</td><td><span class="qty-pill qm">${item.qty}</span></td></tr>`;
+  });
+
+  document.getElementById('master-body').innerHTML = `
+    <div class="bom-tbl-wrap"><table>
+      <thead><tr><th style="width:150px">Stock Code</th><th>Description</th><th style="width:90px">Total Qty</th></tr></thead>
+      <tbody>${rows}</tbody>
+      <tfoot><tr><td colspan="2">${sorted.length} unique items · ${n} array(s)</td><td>${grand} total</td></tr></tfoot>
+    </table></div>`;
+
+  checkPDF();
+}
+
+function checkPDF(){
+  const ok = document.getElementById('pj-name').value.trim() &&
+             document.getElementById('pj-client').value.trim() &&
+             document.getElementById('pj-sales').value.trim() &&
+             history.length > 0;
+  document.getElementById('btn-pdf').disabled = !ok;
+}
+
+/* ═══════════════════════════════════════════════
+   PDF EXPORT
+═══════════════════════════════════════════════ */
+function doPDF(){
+  const projName   = document.getElementById('pj-name').value.trim();
+  const projClient = document.getElementById('pj-client').value.trim();
+  const projSales  = document.getElementById('pj-sales').value.trim();
+  const today = new Date().toLocaleDateString('en-ZA',{year:'numeric',month:'long',day:'numeric'});
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+  const W = doc.internal.pageSize.getWidth();
+  const PH = doc.internal.pageSize.getHeight();
+  let y = 0;
+
+  /* ── Header bar */
+  doc.setFillColor(26,26,26);
+  doc.rect(0,0,W,30,'F');
+
+  /* Try to render SVG logo as canvas → image */
+  let logoPlaced = false;
+  try{
+    const svgStr = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" width="320" height="80">
+      <circle cx="20" cy="20" r="16" fill="white"/>
+      <circle cx="44" cy="20" r="16" fill="white"/>
+      <rect x="4" y="36" width="30" height="30" rx="3" fill="#f97316"/>
+      <circle cx="44" cy="51" r="16" fill="white"/>
+      <text x="76" y="56" font-family="Arial Black,Impact,Arial,sans-serif" font-weight="900" font-size="44" fill="white" letter-spacing="-1">EZ</text>
+      <text x="163" y="56" font-family="Arial,sans-serif" font-weight="100" font-size="44" fill="white" opacity=".6">|</text>
+      <text x="178" y="56" font-family="Arial,Helvetica,sans-serif" font-weight="300" font-size="44" fill="white" letter-spacing="1">BOM</text>
+    </svg>`;
+    const img = new Image();
+    const blob = new Blob([svgStr], {type:'image/svg+xml'});
+    const url = URL.createObjectURL(blob);
+    /* Synchronous canvas approach for inline SVG */
+    const cv = document.createElement('canvas');
+    cv.width = 320; cv.height = 80;
+    /* Fall through to text if image async */
+  } catch(e){}
+
+  /* Fallback: text logo */
+  doc.setFontSize(20); doc.setFont('helvetica','bold');
+  doc.setTextColor(255,255,255);
+  doc.text('EZ', 14, 20);
+  doc.setFont('helvetica','normal');
+  doc.setTextColor(180,180,180);
+  doc.text(' | BOM', 30, 20);
+  doc.setFontSize(7.5); doc.setTextColor(130,130,130);
+  doc.text('Solar Mounting BOM Generator', 14, 26);
+  doc.setTextColor(130,130,130);
+  doc.text('Generated: ' + today, W-14, 20, {align:'right'});
+
+  y = 40;
+
+  /* ── Project Details */
+  const drawSection = (title) => {
+    doc.setFontSize(8.5); doc.setFont('helvetica','bold');
+    doc.setTextColor(255,183,77);
+    doc.text(title, 14, y); y += 3.5;
+    doc.setDrawColor(255,183,77); doc.setLineWidth(0.25);
+    doc.line(14, y, W-14, y); y += 6;
+  };
+
+  drawSection('PROJECT DETAILS');
+  const hw = (W-28)/2;
+  const dets = [['Project:', projName],['Client:', projClient],['Sales Person:', projSales],['Date:', today]];
+  dets.forEach(([lbl,val],i)=>{
+    const x = i%2===0 ? 14 : 14+hw;
+    if(i%2===0 && i>0) y += 8;
+    doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(110,110,110);
+    doc.text(lbl, x, y);
+    doc.setFont('helvetica','normal'); doc.setTextColor(30,30,30);
+    doc.text(String(val), x+28, y);
+  });
+  y += 14;
+
+  /* ── Arrays Summary */
+  drawSection('ARRAYS & STRINGS');
+  history.forEach((e,i)=>{
+    doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(30,30,30);
+    doc.text(`${i+1}.  ${e.sectionName}`, 16, y);
+    doc.setFont('helvetica','normal'); doc.setTextColor(110,110,110);
+    doc.text(e.label, 58, y);
+    y += 5.5;
+    if(y > PH-40){ doc.addPage(); y=20; }
+  });
+  y += 6;
+
+  /* ── Consolidated BOM */
+  drawSection('CONSOLIDATED BILL OF MATERIALS');
+
+  const sorted = sortBOM(master);
+  const grand  = sorted.reduce((s,m)=>s+m.qty,0);
+
+  /* Build body with category sub-headers */
+  let lastCat2 = null;
+  const tableBody = [];
+  sorted.forEach(m => {
+    const info = CAT[m.code] || { desc:m.code, cat:'Other' };
+    if(info.cat !== lastCat2){
+      tableBody.push([{
+        content: catLabel(info.cat),
+        colSpan:3,
+        styles:{ fillColor:[38,38,38], textColor:[160,160,160], fontSize:6.5, fontStyle:'bold', cellPadding:2 }
+      }]);
+      lastCat2 = info.cat;
+    }
+    tableBody.push([m.code, info.desc, String(m.qty)]);
+  });
+
+  doc.autoTable({
+    startY: y,
+    head: [['Stock Code','Description','Qty']],
+    body: tableBody,
+    foot: [['', `${sorted.length} unique items · ${history.length} array(s)`, `Total: ${grand}`]],
+    styles:       { fontSize:7.8, cellPadding:2.8, textColor:[40,40,40], lineColor:[220,220,220], lineWidth:0.18 },
+    headStyles:   { fillColor:[26,26,26], textColor:[255,183,77], fontStyle:'bold', fontSize:7.5 },
+    footStyles:   { fillColor:[245,245,245], textColor:[100,100,100], fontStyle:'bold', fontSize:7.5 },
+    alternateRowStyles: { fillColor:[250,250,250] },
+    columnStyles: { 0:{cellWidth:36,fontStyle:'bold',textColor:[0,90,110]}, 2:{cellWidth:18,halign:'right'} },
+    margin:       { left:14, right:14 },
+    theme:        'grid',
+  });
+
+  /* ── Footer */
+  y = PH - 10;
+  doc.setFontSize(7); doc.setFont('helvetica','italic'); doc.setTextColor(170,170,170);
+  doc.text('EZ | BOM Systems © 2026 Norman Myburgh. All Rights Reserved.', W/2, y, {align:'center'});
+
+  const safe = (projName||'Project').replace(/[^a-z0-9]/gi,'_');
+  doc.save(`EZ-BOM_${safe}_${new Date().toISOString().slice(0,10)}.pdf`);
+}
+
+/* ═══════════════════════════════════════════════
+   MODE SWITCHING
+═══════════════════════════════════════════════ */
+let currentMode = 'a';
+function setMode(m){
+  currentMode = m;
+  lastBOM = []; lastMeta = {};
+  ['a','b','c'].forEach(x => {
+    const t = document.getElementById('tab-'+x);
+    t.className = 'tab' + (x===m ? ` active-${x}` : '');
+    document.getElementById('card-'+x).style.display = x===m ? '' : 'none';
+  });
+  document.getElementById('bom-title').className = {a:'ca',b:'cb',c:'cc'}[m];
+  clearPreview();
+  if(m==='a') onAChange();
+}
+
+function clearPreview(){
+  document.getElementById('bom-body').innerHTML = `
+    <div class="empty-bom">
+      <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/></svg>
+      Configure above and click <strong style="color:#666">Generate BOM</strong>
+    </div>`;
+  document.getElementById('bom-count').textContent = '—';
+}
+
+/* ── FLASH MESSAGES ── */
+let _flashT = null;
+function flash(type, msg){
+  const id = type==='ok' ? 'fOk' : 'fErr';
+  const el = document.getElementById(id);
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(_flashT);
+  _flashT = setTimeout(()=>el.classList.remove('show'), 3200);
+}
+
+/* ── ESCAPE HTML ── */
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+/* ── INIT ── */
+setMode('a');
+onAChange();
 </script>
 </body>
 </html>
