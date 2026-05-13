@@ -409,176 +409,236 @@ tfoot td:last-child{text-align:right}
   All calculations hard-coded. No external API.
 ══════════════════════════════════════════════════*/
 
-/* ── CATALOGUE ──────────────────────────────── */
+/* ── CATALOGUE (descriptions verbatim from spreadsheet) ────── */
 const CAT = {
-  /* Aeri Rails */
-  'ER-R-AE/3600': { desc:'Aeri Rail, 40×3600mm',             cat:'Rail' },
-  'ER-R-AE/2400': { desc:'Aeri Rail, 40×2400mm',             cat:'Rail' },
-  /* Splices */
-  'ER-SP-AE':     { desc:'Splice for Aeri Rail',              cat:'Splice' },
-  /* Interfaces */
-  'ER-TH':        { desc:'Tile Hook Interface for Aeri Rail', cat:'Interface' },
-  'ER-IBR':       { desc:'IBR Interface for Aeri Rail',       cat:'Interface' },
-  'ER-COR':       { desc:'Corrugated Interface for Aeri Rail',cat:'Interface' },
-  'ER-KL-31':     { desc:'Kliplok Interface for Aeri Rail',   cat:'Interface' },
-  /* Clamps — Aeri */
-  'ER-IC-AE/30-40/L50':  { desc:'Aeri Rail Inter Clamp 30–40mm, L50',    cat:'MidClamp' },
-  'ER-ECAE/28-36/L50':   { desc:'Aeri End Clamp Universal 28–40mm, L50', cat:'EndClamp' },
-  'ER-EC-ST30/L50':      { desc:'Aeri End Clamp Standard 30mm, L50',     cat:'EndClamp' },
-  'ER-EC-ST35/L50':      { desc:'Aeri End Clamp Standard 35mm, L50',     cat:'EndClamp' },
-  /* Rail Clamp (foot clamp) */
-  'ER-RC-AE':     { desc:'Rail Clamp for Aeri Rail with Nut', cat:'RailClamp' },
-  /* Ground Mount — Purlins */
-  'WQ-LTX-C60':         { desc:'Wochn C60 Purlin 5000mm',          cat:'Rail' },
-  'WQ-LTX-C60-2100MM':  { desc:'Wochn C60 Purlin 2100mm',          cat:'Rail' },
-  'WQ-LTX-C60-5500MM':  { desc:'Wochn C60 Purlin 5500mm',          cat:'Rail' },
-  /* Ground Mount — Splice */
-  'WQ-SK-C60':    { desc:'Wochn C60 Splice Kit',                   cat:'Splice' },
-  /* Ground Mount — Interface */
-  'WQ-CRX-CA60':  { desc:'Wochn C Rail Fix Adapter (L-Bracket)',    cat:'Interface' },
-  /* Ground Mount — Back Strength */
-  'WQ-SKX-L45':   { desc:'Wochn Back Strength Kit L45 3110mm',      cat:'Interface' },
-  /* Ground Mount — Support Legs */
-  'WQ-SC-2P-20-800': { desc:'Wochn SC Support Leg 20° 800mm',       cat:'Interface' },
-  /* Ground Mount — Clamps */
-  'WQ-CE-3035':   { desc:'Wochn CP End Clamp 30 & 35',              cat:'EndClamp' },
-  'WQ-CM-3035':   { desc:'Wochn CP Mid Clamp 30 & 35',              cat:'MidClamp' },
-  /* Mini-Rail — Rails */
-  'WQ-TRP-25-400':{ desc:'H25 TR-P MiniRail 400mm (Portrait)',       cat:'Rail' },
-  'WQ-TRP-60-400':{ desc:'H60 TR-P MiniRail 400mm (Portrait)',       cat:'Rail' },
-  'WQ-TRU-30-120':{ desc:'H30 TR-U MiniRail 120mm (Landscape)',      cat:'Rail' },
-  /* Mini-Rail — Clamps */
-  'WQ-TRE-3035-S':{ desc:'WQ End Clamp Universal 30–35mm Short',     cat:'EndClamp' },
-  'WQ-TRM-3035-S':{ desc:'WQ Mid Clamp Universal 30–35mm Short',     cat:'MidClamp' },
-  /* Mini-Rail — Lug */
-  'WQ-TR-GL':     { desc:'WQ Mini-Rail Grounding Lug',               cat:'GroundLug' },
-  /* Grounding & Clips */
-  'EZ-GC-AE':     { desc:'Grounding Clip II for Aeri Rail',          cat:'GroundClip' },
-  'EZ-GC-ST':     { desc:'Grounding Clip with Clenergy Logo',        cat:'GroundClip' },
-  'EZ-GL-U':      { desc:'Universal Grounding Lug',                  cat:'GroundLug'  },
-  'EZ-CC-PV/4':   { desc:'Universal Cable Clip for PV Panels',       cat:'CableClip'  },
+  /* ── Aeri Clamps (rooftop quoting order: EndClamp first) */
+  'ER-ECAE/28-36/L50':  { desc:'Universal end clamp 28-40mm Aeri',                           cat:'A_EndClamp'  },
+  'ER-EC-ST30/L50':     { desc:'End Clamp, Standard 30mm, Length 50mm',                      cat:'A_EndClamp'  },
+  'ER-EC-ST35/L50':     { desc:'End Clamp, Standard 35mm, Length 50mm',                      cat:'A_EndClamp'  },
+  'ER-IC-AE/30-40/L50': { desc:'Aeri Rail Solution, Inter Clamp 30-40mm, Length 50mm',       cat:'A_MidClamp'  },
+  /* ── Aeri Splice */
+  'ER-SP-AE':           { desc:'Splice for Aeri Rail',                                        cat:'A_Splice'    },
+  /* ── Aeri Interfaces (combined hook + rail clamp, per sheet stock code) */
+  'ER-I-PRO/01/AE':     { desc:'PV-ezRack SolarRoof Pro, Tile Hook Interface with Rail Clamp',cat:'A_Interface' },
+  'ER-I-IBR/AE':        { desc:'PV-ezRack SolarRoof IBR Interface with Rail Clamp',           cat:'A_Interface' },
+  'ER-I-COR/AE':        { desc:'PV-ezRack SolarRoof Corrugated Interface with Rail Clamp',    cat:'A_Interface' },
+  'ER-I-KL/AE':         { desc:'PV-ezRack SolarRoof Kliplok Interface with Rail Clamp',       cat:'A_Interface' },
+  /* ── Aeri Grounding */
+  'EZ-GC-AE':           { desc:'Grounding Clip II for Aeri Rail',                             cat:'A_GroundClip'},
+  'EZ-GL-U':            { desc:'Universal Grounding Lug',                                     cat:'A_GroundLug' },
+  /* ── Aeri Cable Clip */
+  'EZ-CC-PV/4':         { desc:'Universal Cable Clip for PV Panels',                          cat:'A_CableClip' },
+  /* ── Aeri Rails (LAST in rooftop quoting order per dashboard) */
+  'ER-R-AE/3600':       { desc:'Aeri Rail, 40*3600mm',                                        cat:'A_Rail'      },
+  'ER-R-AE/2400':       { desc:'Aeri Rail, 40*2400mm',                                        cat:'A_Rail'      },
+
+  /* ── Ground Mount Clamps (first in GM quoting order) */
+  'WQ-CE-3035':         { desc:'Wochn CP End Clamp 30 and 35',                                cat:'G_EndClamp'  },
+  'WQ-CM-3035':         { desc:'Wochn CP Mid Clamp 30 and 35',                                cat:'G_MidClamp'  },
+  /* ── Ground Mount Splice */
+  'WQ-SK-C60':          { desc:'Wochn C60 Splice Kit (incl. 4x Bolts, Nuts, washers)',        cat:'G_Splice'    },
+  /* ── Ground Mount Interface / Brackets */
+  'WQ-CRX-CA60':        { desc:'Wochn C Rail Fix Adapter / L-Bracket (incl. hardware)',       cat:'G_Interface' },
+  'WQ-SKX-L45':         { desc:'Wochn Back Strength Kit L45 3110mm (incl. 2x Self Tappers)',  cat:'G_Interface' },
+  /* ── Ground Mount Purlins */
+  'WQ-LTX-C60':         { desc:'Wochn C60 Purlin 5000mm',                                     cat:'G_Purlin'    },
+  'WQ-LTX-C60-2100MM':  { desc:'Wochn C60 Purlin 2100mm',                                     cat:'G_Purlin'    },
+  'WQ-LTX-C60-5500MM':  { desc:'Wochn C60 Purlin 5500mm',                                     cat:'G_Purlin'    },
+  /* ── Ground Mount Support Legs */
+  'WQ-SC-2P-20-800':    { desc:'Wochn SC Support Leg 20°, 800mm (incl. hardware)',            cat:'G_Support'   },
+  /* ── Ground Mount Grounding */
+  'EZ-GL-U':            { desc:'Universal Grounding Lug',                                     cat:'A_GroundLug' }, // shared code
+  'EZ-GC-ST':           { desc:'Grounding Clip, with Clenergy Logo',                          cat:'G_GroundClip'},
+
+  /* ── Mini-Rail (rails first, then clamps, lug, clip) */
+  'WQ-TRP-25-400':      { desc:'H25 TR π MiniRail, 400mm (Portrait)',                         cat:'B_Rail'      },
+  'WQ-TRP-60-400':      { desc:'H60 TR π MiniRail, 400mm (Portrait)',                         cat:'B_Rail'      },
+  'WQ-TRU-30-120':      { desc:'H30 TR U MiniRail, 120mm (Landscape)',                        cat:'B_Rail'      },
+  'WQ-TRE-3035-S':      { desc:'Silver TR End Clamp (Universal)',                              cat:'B_EndClamp'  },
+  'WQ-TRM-3035-S':      { desc:'Silver TR Mid Clamp, grounding clip integrated',               cat:'B_MidClamp'  },
+  'WQ-TR-GL':           { desc:'TR Grounding Lug, J55 nut',                                   cat:'B_GroundLug' },
 };
 
-/* ── SORT ORDER (exact spreadsheet sequence) ── */
-const CAT_WEIGHT = {
-  'Rail':10, 'Splice':20, 'Interface':30,
-  'RailClamp':38, 'MidClamp':40, 'EndClamp':50,
-  'GroundClip':60, 'CableClip':70, 'GroundLug':80
+/*  SORT WEIGHT MAP — mirrors exact top-to-bottom dashboard/quoting sequence.
+    Rooftop (A_*): EndClamp → MidClamp → Splice → Interface → GroundClip → GroundLug → CableClip → Rail
+    Mini-Rail (B_*): Rail → EndClamp → MidClamp → GroundLug → CableClip (from sheet)
+    Ground Mount (G_*): EndClamp → MidClamp → Splice → Interface → Purlin → Support → GroundLug → GroundClip → CableClip
+    Shared codes (EZ-GL-U, EZ-CC-PV/4) kept in consistent positions across modes via weight. */
+const SORT_WEIGHT = {
+  /* Rooftop quoting order */
+  'A_EndClamp':   10,
+  'A_MidClamp':   20,
+  'A_Splice':     30,
+  'A_Interface':  40,
+  'A_GroundClip': 50,
+  'A_GroundLug':  60,
+  'A_CableClip':  70,
+  'A_Rail':       80,
+  /* Mini-Rail quoting order */
+  'B_Rail':       15,
+  'B_EndClamp':   25,
+  'B_MidClamp':   35,
+  'B_GroundLug':  65,
+  /* Ground Mount quoting order */
+  'G_EndClamp':   10,
+  'G_MidClamp':   20,
+  'G_Splice':     30,
+  'G_Interface':  40,
+  'G_Purlin':     50,
+  'G_Support':    60,
+  'G_GroundLug':  70,  // EZ-GL-U lands here for GM
+  'G_GroundClip': 80,
 };
-function catW(cat){ return CAT_WEIGHT[cat] ?? 99; }
-
-/* ── RAIL OPTIMISER: 3600 + 2400 only ──────── */
-function optimiseRails(runPerLine){
-  /* Greedy: maximise 3600s, fill remainder with 2400s. Minimise pieces. */
-  let best = null;
-  const max36 = Math.floor(runPerLine / 3600) + 2;
-  for(let n36 = max36; n36 >= 0; n36--){
-    const rem = runPerLine - n36 * 3600;
-    if(rem < 0) continue;
-    const n24 = rem > 0 ? Math.ceil(rem / 2400) : 0;
-    const total = n36 * 3600 + n24 * 2400;
-    const pieces = n36 + n24;
-    if(total >= runPerLine){
-      if(!best || pieces < best.pieces || (pieces === best.pieces && total < best.total)){
-        best = { pieces, total, n36, n24 };
-      }
-    }
-  }
-  return best || { n36:0, n24:1 };
+function sortW(code){
+  const cat = CAT[code]?.cat ?? 'Z';
+  return (SORT_WEIGHT[cat] ?? 90) * 1000 + code.charCodeAt(0);
 }
 
-function buildRailItems(runPerLine, strings){
-  const doubled = runPerLine * 2;
-  let n36t, n24t; // totals across both lines
-  if(doubled <= 2400){ n36t = 0; n24t = 1; }
-  else if(doubled <= 3600){ n36t = 1; n24t = 0; }
-  else {
-    const { n36, n24 } = optimiseRails(runPerLine);
-    n36t = n36 * 2; n24t = n24 * 2;
+/* ── BOM SORT — stable, exact quoting order ── */
+function sortBOM(bom){
+  return [...bom].sort((a,b) => sortW(a.code) - sortW(b.code));
+}
+
+/* ══════════════════════════════════════════════════
+   RAIL OPTIMISER — 3600 + 2400 ONLY
+   Max overhang: 200mm per side.
+   Algorithm:
+     1. If both lines fit in a single shared rail → 1 piece total.
+     2. Otherwise per-line: find combo of 3600+2400 that covers
+        min_run with the least pieces and ≤200mm overhang each side.
+        If no combo achieves ≤200mm (unavoidable), pick minimum overhang.
+══════════════════════════════════════════════════ */
+function buildRailItems(minRunPerLine, strings){
+  const doubled = minRunPerLine * 2;
+  let n36t, n24t;
+
+  if(doubled <= 2400){
+    /* Both lines cut from one 2400mm piece */
+    n36t = 0; n24t = 1;
+  } else if(doubled <= 3600){
+    /* Both lines cut from one 3600mm piece */
+    n36t = 1; n24t = 0;
+  } else {
+    /* Per-line optimisation */
+    let best = null;
+    const maxPieces = Math.ceil(minRunPerLine / 2400) + 2;
+    for(let n36 = Math.floor(minRunPerLine / 3600) + 1; n36 >= 0; n36--){
+      for(let n24 = 0; n24 <= maxPieces; n24++){
+        const total = n36 * 3600 + n24 * 2400;
+        if(total < minRunPerLine) continue;
+        const ov = (total - minRunPerLine) / 2; // overhang each side
+        const pieces = n36 + n24;
+        const score = pieces * 10000 + ov; // prefer fewer pieces, then less overhang
+        if(!best || score < best.score){
+          best = { score, n36, n24, ov };
+        }
+        if(ov > 400) break; // no point going further on n24
+      }
+    }
+    if(!best) best = { n36:0, n24: Math.ceil(minRunPerLine/2400) };
+    n36t = best.n36 * 2;
+    n24t = best.n24 * 2;
   }
+
   const items = [];
-  if(n36t) items.push({ code:'ER-R-AE/3600', qty: n36t * strings });
-  if(n24t) items.push({ code:'ER-R-AE/2400', qty: n24t * strings });
+  if(n36t > 0) items.push({ code:'ER-R-AE/3600', qty: n36t * strings });
+  if(n24t > 0) items.push({ code:'ER-R-AE/2400', qty: n24t * strings });
   return items;
 }
 
-/* ── SPLICE FORMULA: floor((n-1)/3)×2 ────── */
-function calcSplices(n){ return Math.floor((n - 1) / 3) * 2; }
-
-/* ── INTERFACE: 1 per 600mm rail, min 4/panel landscape ── */
-function calcIface(runPerLine, qty, isLandscape){
-  const perLine = Math.max(Math.ceil(runPerLine / 600), 2);
-  const landscapeMin = isLandscape ? qty * 4 : 0; // 4 per panel landscape
-  return Math.max(perLine, landscapeMin / 2) * 2; // × 2 lines
+/* ── Helper: describe rail selection for preview ── */
+function describeRails(minRunPerLine){
+  const doubled = minRunPerLine * 2;
+  if(doubled <= 2400) return { str:`1 × 2400mm (shared, both lines)`, ov: Math.round((2400-doubled)/2) };
+  if(doubled <= 3600) return { str:`1 × 3600mm (shared, both lines)`, ov: Math.round((3600-doubled)/2) };
+  const tmp = buildRailItems(minRunPerLine, 1);
+  const pieces = tmp.map(r => `${r.qty} × ${r.code.match(/\d+mm/)?.[0] ?? r.code}`).join(' + ');
+  const totalLen = tmp.reduce((s,r) => s + r.qty * (r.code.includes('3600') ? 3600 : 2400), 0);
+  const ov = Math.round((totalLen/2 - minRunPerLine)/2);
+  return { str: pieces + ' (per 2 lines)', ov };
 }
 
-const IFACE_CODE = { TH:'ER-TH', IBR:'ER-IBR', COR:'ER-COR', KL:'ER-KL-31' };
+/* ── SPLICE FORMULA kept for reference: floor((qty-1)/3)×2 per string ── */
 
-/* ── BOM SORT ───────────────────────────────── */
-function sortBOM(bom){
-  return [...bom].sort((a, b) => {
-    const wa = catW(CAT[a.code]?.cat ?? 'Other');
-    const wb = catW(CAT[b.code]?.cat ?? 'Other');
-    if(wa !== wb) return wa - wb;
-    return a.code.localeCompare(b.code);
-  });
-}
+/* ── INTERFACE codes (combined hook+railclamp per sheet) ── */
+const IFACE_CODE = {
+  TH: 'ER-I-PRO/01/AE',
+  IBR:'ER-I-IBR/AE',
+  COR:'ER-I-COR/AE',
+  KL: 'ER-I-KL/AE'
+};
 
-/* ═══════════════════════════════════════════════
+/* ─────────────────────────────────────────────────────────
    MODE A — STANDARD ROOFTOP
-═══════════════════════════════════════════════ */
+   Quoting order (from dashboard, exact):
+   1. End Clamp   2. Mid Clamp   3. Splice   4. Interface
+   5. GC-AE       6. GL-U        7. CC-PV/4  8. Rails
+───────────────────────────────────────────────────────── */
 function genA(){
   const isLand   = document.getElementById('a-orient').value === 'landscape';
-  const pw       = parseFloat(document.getElementById('a-pw').value)      || 1134;
-  const ph       = parseFloat(document.getElementById('a-ph').value)      || 1762;
-  const qty      = parseInt(document.getElementById('a-qty').value)       || 1;
-  const strings  = parseInt(document.getElementById('a-strings').value)   || 1;
+  const pw       = parseFloat(document.getElementById('a-pw').value)    || 1134;
+  const ph       = parseFloat(document.getElementById('a-ph').value)    || 1762;
+  const qty      = parseInt(document.getElementById('a-qty').value)     || 1;
+  const strings  = parseInt(document.getElementById('a-strings').value) || 1;
   const ifaceKey = document.getElementById('a-iface').value;
   const ecCode   = document.getElementById('a-ec').value;
-  const mcCode   = document.getElementById('a-mc').value;
+  const mcCode   = 'ER-IC-AE/30-40/L50';
   const totalPan = qty * strings;
 
-  /* Dimension along rail direction */
-  const dim    = isLand ? ph : pw;
-  const runPL  = dim * qty + 20 * (qty - 1) + 80;
+  /* Rail direction dimension */
+  const dim = isLand ? ph : pw;
+  /* Minimum run = panels + mid-clamp gaps. No fixed overhang baked in —
+     the rail optimiser finds the actual best fit (max 200mm/side). */
+  const minRunPL = dim * qty + 20 * (qty - 1);
 
   /* Rails */
-  const railItems = buildRailItems(runPL, strings);
+  const railItems = buildRailItems(minRunPL, strings);
 
-  /* Splices: per-line segments - 1, × 2 lines, × strings */
-  const splicePerStr = calcSplices(qty);
-  /* Interfaces */
-  const ifaceQty = calcIface(runPL, qty, isLand) * strings;
-  const ifCode   = IFACE_CODE[ifaceKey];
-  /* Rail clamps: 2 per interface foot */
-  const rcQty    = ifaceQty * 2;
+  /* Splices: floor((qty-1)/3) × 2 per string (from sheet data) */
+  const spliceQty = Math.floor((qty - 1) / 3) * 2 * strings;
+
+  /* Interfaces: 1 per 600mm, min 2 per rail line (= 4 total)
+     Landscape min: 4 per panel (2 per line) */
+  const minRunActual = railItems.reduce((s,r) => {
+    const len = r.code.includes('3600') ? 3600 : 2400;
+    return s + (r.qty / strings) * len;
+  }, 0) / 2; // per-line length
+  const ifPerLine = Math.max(Math.ceil(minRunActual / 600), 2);
+  const ifMin     = isLand ? Math.max(ifPerLine, qty * 2) : ifPerLine;
+  const ifaceQty  = ifMin * 2 * strings; // × 2 rail lines × strings
+  const ifCode    = IFACE_CODE[ifaceKey];
 
   /* Clamps */
   const midQty = (qty - 1) * 2 * strings;
-  const endQty = 4 * strings; // 2 ends × 2 rail lines
+  const endQty = 4 * strings;
+  const gcQty  = midQty; // grounding clips = mid count
 
-  /* Mandatory add-ons */
-  const gcQty   = midQty;               // grounding clips = mid count
-  const ccQty   = totalPan;             // 1 per panel
-  const lugQty  = 2 * strings;          // 2 per string
+  /* Cable + Lug */
+  const ccQty  = totalPan;      // 1 per panel
+  const lugQty = 2 * strings;   // 2 per string
 
+  /* Build BOM in exact dashboard quoting order */
   const bom = [];
+  bom.push({ code: ecCode,           qty: endQty });
+  if(midQty > 0) bom.push({ code: mcCode, qty: midQty });
+  if(spliceQty > 0) bom.push({ code:'ER-SP-AE', qty: spliceQty });
+  bom.push({ code: ifCode,           qty: ifaceQty });
+  if(gcQty > 0) bom.push({ code:'EZ-GC-AE', qty: gcQty });
+  bom.push({ code:'EZ-GL-U',         qty: lugQty });
+  bom.push({ code:'EZ-CC-PV/4',      qty: ccQty });
   railItems.forEach(r => bom.push({ code:r.code, qty:r.qty }));
-  if(splicePerStr > 0) bom.push({ code:'ER-SP-AE',      qty: splicePerStr * strings });
-  bom.push({ code: ifCode,   qty: ifaceQty });
-  bom.push({ code:'ER-RC-AE', qty: rcQty });
-  if(midQty > 0) bom.push({ code: mcCode,   qty: midQty });
-  bom.push({ code: ecCode,   qty: endQty });
-  if(gcQty  > 0) bom.push({ code:'EZ-GC-AE', qty: gcQty });
-  bom.push({ code:'EZ-CC-PV/4', qty: ccQty });
-  bom.push({ code:'EZ-GL-U',    qty: lugQty });
 
   const sorted = sortBOM(bom);
-  const label  = `${qty}p ${isLand?'Landscape':'Portrait'} (${document.getElementById('a-iface').selectedOptions[0].text}) ×${strings}`;
+  const ifaceLabel = document.getElementById('a-iface').selectedOptions[0].text;
+  const label = `${qty}p ${isLand?'Landscape':'Portrait'} (${ifaceLabel}) ×${strings}`;
   setLastBOM(sorted, label, 'a', document.getElementById('a-name').value.trim() || 'Unnamed');
 
-  /* Live preview update */
-  showRailPreview(runPL, railItems, ifaceQty, strings);
+  /* Update live preview */
+  const { str: railStr, ov } = describeRails(minRunPL);
+  const prevEl = document.getElementById('a-preview');
+  prevEl.style.display = '';
+  prevEl.innerHTML = `<strong>Min rail run:</strong> ${minRunPL}mm/line &nbsp;|&nbsp; <strong>Rails:</strong> ${railStr} &nbsp;|&nbsp; <strong>Overhang:</strong> ~${ov}mm/side &nbsp;|&nbsp; <strong>Interfaces:</strong> ${ifaceQty}`;
+
   renderPreview(sorted, `${isLand?'Landscape':'Portrait'} Rooftop BOM`, 'ca', 'qa');
 }
 
@@ -588,27 +648,15 @@ function onAChange(){
   const ph  = parseFloat(document.getElementById('a-ph').value)  || 1762;
   const qty = parseInt(document.getElementById('a-qty').value)   || 1;
   const dim = isLand ? ph : pw;
-  const runPL = dim * qty + 20 * (qty - 1) + 80;
-  const { n36, n24 } = optimiseRails(runPL);
-  const doubled = runPL * 2;
-  let railStr = '';
-  if(doubled <= 3600){
-    railStr = doubled <= 2400 ? '1 × 2400mm (covers both lines)' : '1 × 3600mm (covers both lines)';
-  } else {
-    const t36 = n36*2, t24 = n24*2;
-    railStr = [t36 && `${t36} × 3600mm`, t24 && `${t24} × 2400mm`].filter(Boolean).join(' + ');
-  }
+  const minRunPL = dim * qty + 20 * (qty - 1);
+  const { str: railStr, ov } = describeRails(minRunPL);
+  const splices = Math.floor((qty-1)/3)*2;
   const p = document.getElementById('a-preview');
   p.style.display = '';
-  p.innerHTML = `<strong>Rail run:</strong> ${runPL}mm/line &nbsp;|&nbsp; <strong>Rails:</strong> ${railStr} &nbsp;|&nbsp; <strong>Splices:</strong> ${calcSplices(qty) > 0 ? calcSplices(qty) + ' pair' : 'none'}`;
+  p.innerHTML = `<strong>Min run:</strong> ${minRunPL}mm/line &nbsp;|&nbsp; <strong>Rails:</strong> ${railStr} &nbsp;|&nbsp; <strong>~Overhang:</strong> ${ov}mm/side &nbsp;|&nbsp; <strong>Splices:</strong> ${splices > 0 ? splices + ' pairs' : 'none'}`;
 }
 
-function showRailPreview(runPL, railItems, ifQty, strings){
-  const railStr = railItems.map(r => `${r.qty/strings*strings}×${CAT[r.code]?.desc?.match(/\d+mm/)?.[0]}`).join(' + ');
-  const p = document.getElementById('a-preview');
-  p.style.display = '';
-  p.innerHTML = `<strong>Rail run:</strong> ${runPL}mm/line &nbsp;|&nbsp; <strong>Rails:</strong> ${railStr} &nbsp;|&nbsp; <strong>Interfaces:</strong> ${ifQty}`;
-}
+function showRailPreview(){ /* replaced by inline in genA */ }
 
 /* ═══════════════════════════════════════════════
    MODE B — SHORT RAIL (MINI-RAIL)
@@ -625,19 +673,30 @@ function genB(){
   const strings = parseInt(document.getElementById('b-strings').value)|| 1;
   const totalPan = qty * strings;
 
-  /* Quantities per string */
+  /* From sheet: 6 Panel Short Rail (Portrait) order:
+     WQ-TRE-3035-S (end), WQ-TRM-3035-S (mid), WQ-TRπ-60-400 (rail), WQ-TR-GL (lug), EZ-CC-PV/4 */
   const mids    = (qty - 1) * 2;
   const ends    = 4;
   const totalMR = (mids + ends) * strings;
   const midQty  = mids * strings;
   const endQty  = ends * strings;
-  const ccQty   = totalPan;       // 1 per panel
-  const lugQty  = 2 * strings;   // 2 per string (WQ-TR-GL)
+  const ccQty   = totalPan;
+  const lugQty  = 2 * strings;
+  const mrCode  = MR_CODES[type].code;
 
-  const mrCode = MR_CODES[type].code;
-  const bom = [
-    { code: mrCode,          qty: totalMR },
-    { code:'WQ-TRM-3035-S', qty: midQty  },
+  /* Quoting order from spreadsheet */
+  const bom = [];
+  bom.push({ code:'WQ-TRE-3035-S', qty: endQty });
+  if(midQty > 0) bom.push({ code:'WQ-TRM-3035-S', qty: midQty });
+  bom.push({ code: mrCode,          qty: totalMR });
+  bom.push({ code:'WQ-TR-GL',       qty: lugQty  });
+  bom.push({ code:'EZ-CC-PV/4',     qty: ccQty   });
+
+  const sorted = sortBOM(bom);
+  const label  = `${qty}p ${MR_CODES[type].desc.split(' ')[0]} Mini-Rail ×${strings}`;
+  setLastBOM(sorted, label, 'b', document.getElementById('b-name').value.trim() || 'Unnamed');
+  renderPreview(sorted, 'Short Rail (Mini-Rail) BOM', 'cb', 'qb');
+}
     { code:'WQ-TRE-3035-S', qty: endQty  },
     { code:'EZ-CC-PV/4',    qty: ccQty   },
     { code:'WQ-TR-GL',      qty: lugQty  },
@@ -655,40 +714,31 @@ function genB(){
 ═══════════════════════════════════════════════ */
 const GM_TEMPLATES = {
   12: [
-    /* Rails / Purlins */
-    { code:'WQ-LTX-C60',        qty:4  }, // 5000mm
-    { code:'WQ-LTX-C60-2100MM', qty:4  }, // 2100mm
-    /* Splices */
-    { code:'WQ-SK-C60',         qty:4  },
-    /* Interfaces / L-Brackets */
-    { code:'WQ-CRX-CA60',       qty:12 },
-    { code:'WQ-SKX-L45',        qty:4  },
-    { code:'WQ-SC-2P-20-800',   qty:3  },
-    /* Clamps */
-    { code:'WQ-CM-3035',        qty:20 },
-    { code:'WQ-CE-3035',        qty:8  },
-    /* Grounding */
-    { code:'EZ-GC-ST',          qty:20 },
-    { code:'EZ-CC-PV/4',        qty:12 },
-    { code:'EZ-GL-U',           qty:4  },
+    /* Exact quoting order from dashboard sheet */
+    { code:'WQ-CE-3035',        qty:8  },  // End Clamp
+    { code:'WQ-CM-3035',        qty:20 },  // Mid Clamp
+    { code:'WQ-SK-C60',         qty:4  },  // Splice Kit
+    { code:'WQ-CRX-CA60',       qty:12 },  // L-Bracket
+    { code:'WQ-SKX-L45',        qty:4  },  // Back Strength Kit
+    { code:'WQ-LTX-C60',        qty:4  },  // Purlin 5000mm
+    { code:'WQ-LTX-C60-2100MM', qty:4  },  // Purlin 2100mm
+    { code:'WQ-SC-2P-20-800',   qty:3  },  // Support Leg
+    { code:'EZ-GL-U',           qty:4  },  // Grounding Lug
+    { code:'EZ-GC-ST',          qty:20 },  // Grounding Clip
+    { code:'EZ-CC-PV/4',        qty:12 },  // Cable Clip
   ],
   18: [
-    /* Rails / Purlins */
-    { code:'WQ-LTX-C60',        qty:4  }, // 5000mm
-    { code:'WQ-LTX-C60-5500MM', qty:4  }, // 5500mm
-    /* Splices */
+    { code:'WQ-CE-3035',        qty:8  },
+    { code:'WQ-CM-3035',        qty:32 },
     { code:'WQ-SK-C60',         qty:4  },
-    /* Interfaces / L-Brackets */
     { code:'WQ-CRX-CA60',       qty:16 },
     { code:'WQ-SKX-L45',        qty:4  },
+    { code:'WQ-LTX-C60-5500MM', qty:4  },  // Purlin 5500mm (18-panel)
+    { code:'WQ-LTX-C60',        qty:4  },  // Purlin 5000mm
     { code:'WQ-SC-2P-20-800',   qty:4  },
-    /* Clamps */
-    { code:'WQ-CM-3035',        qty:32 },
-    { code:'WQ-CE-3035',        qty:8  },
-    /* Grounding */
+    { code:'EZ-GL-U',           qty:4  },
     { code:'EZ-GC-ST',          qty:32 },
     { code:'EZ-CC-PV/4',        qty:18 },
-    { code:'EZ-GL-U',           qty:4  },
   ],
 };
 
@@ -697,13 +747,13 @@ function genC(){
   const tables = parseInt(document.getElementById('c-tables').value) || 1;
   const tpl    = GM_TEMPLATES[size];
 
+  /* Ground mount templates are already in exact dashboard quoting order.
+     We multiply quantities by table count but do NOT re-sort via sortBOM
+     because sortBOM uses generic cat weights; GM has its own order baked in. */
   const bom = tpl.map(item => ({ code:item.code, qty: Math.ceil(item.qty * tables) }));
-  /* Ground mount templates are already in spreadsheet order — preserve that order,
-     but still run through sortBOM to handle multi-mode consolidation later */
-  const sorted = sortBOM(bom);
-  const label  = `${size}-Panel Ground Mount ×${tables}`;
-  setLastBOM(sorted, label, 'c', document.getElementById('c-name').value.trim() || 'Unnamed');
-  renderPreview(sorted, `${size}-Panel Ground Mount BOM`, 'cc', 'qc');
+  const label = `${size}-Panel Ground Mount ×${tables}`;
+  setLastBOM(bom, label, 'c', document.getElementById('c-name').value.trim() || 'Unnamed');
+  renderPreview(bom, `${size}-Panel Ground Mount BOM`, 'cc', 'qc');
 }
 
 /* ═══════════════════════════════════════════════
@@ -730,7 +780,15 @@ function renderPreview(bom, title, colClass, qClass){
 }
 
 function catLabel(cat){
-  const L = { Rail:'Rails & Purlins', Splice:'Splices', Interface:'Interfaces & Brackets', RailClamp:'Rail Clamps', MidClamp:'Mid Clamps', EndClamp:'End Clamps', GroundClip:'Grounding Clips', CableClip:'Cable Clips', GroundLug:'Grounding Lugs' };
+  const L = {
+    'A_EndClamp':'End Clamps','A_MidClamp':'Mid Clamps','A_Splice':'Splices',
+    'A_Interface':'Interfaces','A_GroundClip':'Grounding Clips',
+    'A_GroundLug':'Grounding Lugs','A_CableClip':'Cable Clips','A_Rail':'Rails',
+    'B_Rail':'Mini-Rails','B_EndClamp':'End Clamps','B_MidClamp':'Mid Clamps','B_GroundLug':'Grounding Lugs',
+    'G_EndClamp':'End Clamps','G_MidClamp':'Mid Clamps','G_Splice':'Splice Kits',
+    'G_Interface':'Interfaces & Brackets','G_Purlin':'Purlins','G_Support':'Support Legs',
+    'G_GroundLug':'Grounding Lugs','G_GroundClip':'Grounding Clips',
+  };
   return L[cat] || cat;
 }
 
@@ -799,7 +857,9 @@ function renderCart(){
       <button class="hist-rm" onclick="removeFromProject(${i})">×</button>
     </div>`).join('');
 
-  /* Master BOM — sort the accumulated array */
+  /* Master BOM — sortBOM handles A and B modes well.
+     For GM items that share codes with rooftop (EZ-GL-U, EZ-CC-PV/4)
+     they accumulate correctly since we match by stockCode. */
   const sorted = sortBOM(master);
   let lastCat = null, grand = 0;
   let rows = '';
@@ -930,9 +990,10 @@ function doPDF(){
   const tableBody = [];
   sorted.forEach(m => {
     const info = CAT[m.code] || { desc:m.code, cat:'Other' };
+    const cLabel = catLabel(info.cat);
     if(info.cat !== lastCat2){
       tableBody.push([{
-        content: catLabel(info.cat),
+        content: cLabel,
         colSpan:3,
         styles:{ fillColor:[38,38,38], textColor:[160,160,160], fontSize:6.5, fontStyle:'bold', cellPadding:2 }
       }]);
