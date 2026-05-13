@@ -445,9 +445,8 @@ const CAT = {
   'WQ-LTX-C60-2100MM':  { desc:'Wochn C60 Purlin 2100mm',                                     cat:'G_Purlin'    },
   'WQ-LTX-C60-5500MM':  { desc:'Wochn C60 Purlin 5500mm',                                     cat:'G_Purlin'    },
   /* ── Ground Mount Support Legs */
-  'WQ-SC-2P-20-800':    { desc:'Wochn SC Support Leg 20°, 800mm (incl. hardware)',            cat:'G_Support'   },
-  /* ── Ground Mount Grounding */
-  'EZ-GL-U':            { desc:'Universal Grounding Lug',                                     cat:'A_GroundLug' }, // shared code
+  'WQ-SC-2P-20-800':    { desc:'Wochn SC Support Leg 20deg, 800mm (incl. hardware)',          cat:'G_Support'   },
+  /* ── Grounding Clip (Clenergy) */
   'EZ-GC-ST':           { desc:'Grounding Clip, with Clenergy Logo',                          cat:'G_GroundClip'},
 
   /* ── Mini-Rail (rails first, then clamps, lug, clip) */
@@ -457,6 +456,8 @@ const CAT = {
   'WQ-TRE-3035-S':      { desc:'Silver TR End Clamp (Universal)',                              cat:'B_EndClamp'  },
   'WQ-TRM-3035-S':      { desc:'Silver TR Mid Clamp, grounding clip integrated',               cat:'B_MidClamp'  },
   'WQ-TR-GL':           { desc:'TR Grounding Lug, J55 nut',                                   cat:'B_GroundLug' },
+  /* ── Shared across all modes */
+  'EZ-CC-PV/4':         { desc:'Universal Cable Clip for PV Panels',                          cat:'A_CableClip' },
 };
 
 /*  SORT WEIGHT MAP — mirrors exact top-to-bottom dashboard/quoting sequence.
@@ -697,17 +698,6 @@ function genB(){
   setLastBOM(sorted, label, 'b', document.getElementById('b-name').value.trim() || 'Unnamed');
   renderPreview(sorted, 'Short Rail (Mini-Rail) BOM', 'cb', 'qb');
 }
-    { code:'WQ-TRE-3035-S', qty: endQty  },
-    { code:'EZ-CC-PV/4',    qty: ccQty   },
-    { code:'WQ-TR-GL',      qty: lugQty  },
-  ].filter(i => i.qty > 0);
-
-  const sorted = sortBOM(bom);
-  const label  = `${qty}p ${MR_CODES[type].desc.split(' ')[0]} Mini-Rail ×${strings}`;
-  setLastBOM(sorted, label, 'b', document.getElementById('b-name').value.trim() || 'Unnamed');
-  renderPreview(sorted, 'Short Rail (Mini-Rail) BOM', 'cb', 'qb');
-}
-
 /* ═══════════════════════════════════════════════
    MODE C — GROUND MOUNT (FIXED TABLES)
    From MOUNTING CONFIG sheet (exact quantities)
