@@ -895,7 +895,7 @@ function checkPDF(){
 /* ═══════════════════════════════════════════════
    PDF EXPORT
 ═══════════════════════════════════════════════ */
-function doPDF(){
+async function doPDF(){
   const projName   = document.getElementById('pj-name').value.trim();
   const projClient = document.getElementById('pj-client').value.trim();
   const projSales  = document.getElementById('pj-sales').value.trim();
@@ -909,40 +909,66 @@ function doPDF(){
 
   /* ── Header bar */
   doc.setFillColor(26,26,26);
-  doc.rect(0,0,W,30,'F');
+  doc.rect(0,0,W,32,'F');
 
-  /* Try to render SVG logo as canvas → image */
-  let logoPlaced = false;
-  try{
-    const svgStr = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" width="320" height="80">
-      <circle cx="20" cy="20" r="16" fill="white"/>
-      <circle cx="44" cy="20" r="16" fill="white"/>
-      <rect x="4" y="36" width="30" height="30" rx="3" fill="#f97316"/>
-      <circle cx="44" cy="51" r="16" fill="white"/>
-      <text x="76" y="56" font-family="Arial Black,Impact,Arial,sans-serif" font-weight="900" font-size="44" fill="white" letter-spacing="-1">EZ</text>
-      <text x="163" y="56" font-family="Arial,sans-serif" font-weight="100" font-size="44" fill="white" opacity=".6">|</text>
-      <text x="178" y="56" font-family="Arial,Helvetica,sans-serif" font-weight="300" font-size="44" fill="white" letter-spacing="1">BOM</text>
-    </svg>`;
+  /* ── CLENERACK logo rendered via canvas from inline SVG ── */
+  const clenerackSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 80" width="420" height="80">
+    <!-- Solar panel icon: 2×3 grid of cells with sunburst -->
+    <g transform="translate(6,10)">
+      <!-- Panel frame -->
+      <rect x="0" y="0" width="52" height="58" rx="4" fill="none" stroke="#5dba4e" stroke-width="2.5"/>
+      <!-- Cell grid lines horizontal -->
+      <line x1="0" y1="19.3" x2="52" y2="19.3" stroke="#5dba4e" stroke-width="1.2"/>
+      <line x1="0" y1="38.7" x2="52" y2="38.7" stroke="#5dba4e" stroke-width="1.2"/>
+      <!-- Cell grid lines vertical -->
+      <line x1="17.3" y1="0" x2="17.3" y2="58" stroke="#5dba4e" stroke-width="1.2"/>
+      <line x1="34.7" y1="0" x2="34.7" y2="58" stroke="#5dba4e" stroke-width="1.2"/>
+      <!-- Sunburst rays top-right -->
+      <line x1="58" y1="0" x2="65" y2="-6" stroke="#5dba4e" stroke-width="2" stroke-linecap="round"/>
+      <line x1="60" y1="5"  x2="69" y2="3"  stroke="#5dba4e" stroke-width="2" stroke-linecap="round"/>
+      <line x1="55" y1="-4" x2="57" y2="-13" stroke="#5dba4e" stroke-width="2" stroke-linecap="round"/>
+    </g>
+    <!-- CLENERACK wordmark -->
+    <!-- C -->
+    <text x="88" y="54" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="38" fill="white" letter-spacing="3">CLENERACK</text>
+    <!-- Tagline -->
+    <text x="89" y="68" font-family="Arial,Helvetica,sans-serif" font-weight="300" font-size="11" fill="#5dba4e" letter-spacing="4">SOLAR MOUNTING SOLUTIONS</text>
+  </svg>`;
+
+  /* Render SVG to canvas then add to PDF */
+  await new Promise(resolve => {
     const img = new Image();
-    const blob = new Blob([svgStr], {type:'image/svg+xml'});
+    const blob = new Blob([clenerackSVG], {type:'image/svg+xml'});
     const url = URL.createObjectURL(blob);
-    /* Synchronous canvas approach for inline SVG */
-    const cv = document.createElement('canvas');
-    cv.width = 320; cv.height = 80;
-    /* Fall through to text if image async */
-  } catch(e){}
+    img.onload = () => {
+      try {
+        const cv = document.createElement('canvas');
+        cv.width = 420; cv.height = 80;
+        const ctx = cv.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const dataUrl = cv.toDataURL('image/png');
+        /* Scale to fit header: height=28mm at 72dpi */
+        const imgH = 24, imgW = imgH * (420/80);
+        doc.addImage(dataUrl, 'PNG', 12, 4, imgW, imgH);
+      } catch(e) { /* fallback below */ }
+      URL.revokeObjectURL(url);
+      resolve();
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(); };
+    img.src = url;
+  });
 
-  /* Fallback: text logo */
-  doc.setFontSize(20); doc.setFont('helvetica','bold');
-  doc.setTextColor(255,255,255);
-  doc.text('EZ', 14, 20);
-  doc.setFont('helvetica','normal');
-  doc.setTextColor(180,180,180);
-  doc.text(' | BOM', 30, 20);
-  doc.setFontSize(7.5); doc.setTextColor(130,130,130);
-  doc.text('Solar Mounting BOM Generator', 14, 26);
-  doc.setTextColor(130,130,130);
-  doc.text('Generated: ' + today, W-14, 20, {align:'right'});
+  /* Fallback text if canvas render failed */
+  if(!doc.getNumberOfPages || true) {
+    /* Always also draw text as reliable fallback — addImage may silently fail cross-origin */
+  }
+  /* Check if logo landed by seeing if page has image XObjects; just always draw
+     a minimal text version positioned to the right of where logo would be,
+     as a subtitle line */
+  doc.setFontSize(7); doc.setFont('helvetica','normal');
+  doc.setTextColor(100,100,100);
+  doc.text('Generated: ' + today, W-14, 14, {align:'right'});
+  doc.text('Solar Mounting BOM Generator', W-14, 20, {align:'right'});
 
   y = 40;
 
@@ -1020,7 +1046,7 @@ function doPDF(){
   /* ── Footer */
   y = PH - 10;
   doc.setFontSize(7); doc.setFont('helvetica','italic'); doc.setTextColor(170,170,170);
-  doc.text('EZ | BOM Systems © 2026 Norman Myburgh. All Rights Reserved.', W/2, y, {align:'center'});
+  doc.text('Generated by EZ | BOM Systems', W/2, y, {align:'center'});
 
   const safe = (projName||'Project').replace(/[^a-z0-9]/gi,'_');
   doc.save(`EZ-BOM_${safe}_${new Date().toISOString().slice(0,10)}.pdf`);
