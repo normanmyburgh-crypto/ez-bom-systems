@@ -175,18 +175,23 @@ tfoot td:last-child{text-align:right}
 <header class="hdr">
   <!-- Full SVG logo matching ez-bom-logo.png -->
   <div class="hdr-logo">
-    <svg viewBox="0 0 320 80" xmlns="http://www.w3.org/2000/svg" aria-label="EZ BOM">
-      <!-- 2×2 icon grid: top-left circle, top-right circle, bottom-left orange square, bottom-right circle -->
-      <circle cx="20" cy="20" r="16" fill="white"/>
-      <circle cx="44" cy="20" r="16" fill="white"/>
-      <rect   x="4"  y="36" width="30" height="30" rx="3" fill="#f97316"/>
-      <circle cx="44" cy="51" r="16" fill="white"/>
+    <svg viewBox="0 0 355 80" xmlns="http://www.w3.org/2000/svg" aria-label="EZ BOM">
+      <!--
+        Icon geometry (r=17, gap=6px between all edges):
+        Col1 cx=20  Col2 cx=60   (20+34+6=60)
+        Row1 cy=20  Row2 cy=60   (20+34+6=60)
+        Square: x=3, y=43, w=34, h=34  (top edge = 20+17+6 = 43)
+      -->
+      <circle cx="20" cy="20" r="17" fill="white"/>
+      <circle cx="60" cy="20" r="17" fill="white"/>
+      <rect   x="3"  y="43" width="34" height="34" rx="3" fill="#f97316"/>
+      <circle cx="60" cy="60" r="17" fill="white"/>
       <!-- EZ bold -->
-      <text x="76" y="56" font-family="'Arial Black','Impact',Arial,sans-serif" font-weight="900" font-size="44" fill="white" letter-spacing="-1">EZ</text>
-      <!-- | thin separator -->
-      <text x="163" y="56" font-family="Arial,sans-serif" font-weight="100" font-size="44" fill="white" opacity=".6">|</text>
-      <!-- BOM thin -->
-      <text x="178" y="56" font-family="Arial,Helvetica,sans-serif" font-weight="300" font-size="44" fill="white" letter-spacing="1">BOM</text>
+      <text x="90" y="57" font-family="'Arial Black','Impact',Arial,sans-serif" font-weight="900" font-size="44" fill="white" letter-spacing="-1">EZ</text>
+      <!-- | separator -->
+      <text x="174" y="57" font-family="Arial,sans-serif" font-weight="200" font-size="44" fill="white" opacity=".55">|</text>
+      <!-- BOM thin — two spaces worth of gap after pipe -->
+      <text x="196" y="57" font-family="Arial,Helvetica,sans-serif" font-weight="300" font-size="44" fill="white" letter-spacing="2">BOM</text>
     </svg>
   </div>
   <div class="hdr-status">
@@ -418,11 +423,13 @@ const CAT = {
   'ER-IC-AE/30-40/L50': { desc:'Aeri Rail Solution, Inter Clamp 30-40mm, Length 50mm',       cat:'A_MidClamp'  },
   /* ── Aeri Splice */
   'ER-SP-AE':           { desc:'Splice for Aeri Rail',                                        cat:'A_Splice'    },
-  /* ── Aeri Interfaces (combined hook + rail clamp, per sheet stock code) */
-  'ER-I-PRO/01/AE':     { desc:'PV-ezRack SolarRoof Pro, Tile Hook Interface with Rail Clamp',cat:'A_Interface' },
-  'ER-I-IBR/AE':        { desc:'PV-ezRack SolarRoof IBR Interface with Rail Clamp',           cat:'A_Interface' },
-  'ER-I-COR/AE':        { desc:'PV-ezRack SolarRoof Corrugated Interface with Rail Clamp',    cat:'A_Interface' },
-  'ER-I-KL/AE':         { desc:'PV-ezRack SolarRoof Kliplok Interface with Rail Clamp',       cat:'A_Interface' },
+  /* ── Aeri Interfaces */
+  'ER-I-PRO/01/AE':     { desc:'PV-ezRack SolarRoof Pro, Tile Interface with Rail Clamp (light–medium)',cat:'A_Interface' },
+  'ER-I-IBR/01/AE':     { desc:'PV-ezRack SolarRoof IBR Interface for Aeri Rail',                      cat:'A_Interface' },
+  'ER-I-COR/01/AE':     { desc:'PV-ezRack SolarRoof Corrugated Interface for Aeri Rail',               cat:'A_Interface' },
+  'ER-I-KL/01/AE':      { desc:'PV-ezRack SolarRoof Kliplok Interface for Aeri Rail',                  cat:'A_Interface' },
+  /* ── Rail Clamp — separate line for IBR / Corrugated / Kliplok (same qty as interface) */
+  'ER-RC-AE':           { desc:'Rail Clamp for Aeri Rail with nut',                                    cat:'A_RailClamp' },
   /* ── Aeri Grounding */
   'EZ-GC-AE':           { desc:'Grounding Clip II for Aeri Rail',                             cat:'A_GroundClip'},
   'EZ-GL-U':            { desc:'Universal Grounding Lug',                                     cat:'A_GroundLug' },
@@ -471,15 +478,17 @@ const SORT_WEIGHT = {
   'A_MidClamp':   20,
   'A_Splice':     30,
   'A_Interface':  40,
+  'A_RailClamp':  45,  /* ER-RC-AE — sits right after interface for IBR/COR/KL */
   'A_GroundClip': 50,
   'A_GroundLug':  60,
   'A_CableClip':  70,
   'A_Rail':       80,
-  /* Mini-Rail quoting order */
-  'B_Rail':       15,
-  'B_EndClamp':   25,
-  'B_MidClamp':   35,
-  'B_GroundLug':  65,
+  /* Mini-Rail quoting order: End → Mid → Rail → Lug → CableClip */
+  'B_EndClamp':   10,
+  'B_MidClamp':   20,
+  'B_Rail':       30,
+  'B_GroundLug':  40,
+  'B_CableClip':  50,
   /* Ground Mount quoting order */
   'G_EndClamp':   10,
   'G_MidClamp':   20,
@@ -561,13 +570,20 @@ function describeRails(minRunPerLine){
 
 /* ── SPLICE FORMULA kept for reference: floor((qty-1)/3)×2 per string ── */
 
-/* ── INTERFACE codes (combined hook+railclamp per sheet) ── */
+/* ── INTERFACE codes (each includes integrated rail clamp per sheet) ── */
 const IFACE_CODE = {
-  TH: 'ER-I-PRO/01/AE',
-  IBR:'ER-I-IBR/AE',
-  COR:'ER-I-COR/AE',
-  KL: 'ER-I-KL/AE'
+  TH:  'ER-I-PRO/01/AE',   // Tile Hook with Rail Clamp
+  IBR: 'ER-I-IBR/01/AE',   // IBR with Rail Clamp
+  COR: 'ER-I-COR/01/AE',   // Corrugated with Rail Clamp
+  KL:  'ER-I-KL/01/AE'     // Kliplok with Rail Clamp
 };
+
+/* Interface qty formula (from DATA sheet):
+   n=1 → 4 (minimum), n≥2 → n*2 per string, n≥20 → n*2+2 per string */
+function calcIfaceQty(qty, strings){
+  const perStr = qty >= 20 ? qty * 2 + 2 : Math.max(4, qty * 2);
+  return perStr * strings;
+}
 
 /* ─────────────────────────────────────────────────────────
    MODE A — STANDARD ROOFTOP
@@ -598,15 +614,8 @@ function genA(){
   /* Splices: floor((qty-1)/3) × 2 per string (from sheet data) */
   const spliceQty = Math.floor((qty - 1) / 3) * 2 * strings;
 
-  /* Interfaces: 1 per 600mm, min 2 per rail line (= 4 total)
-     Landscape min: 4 per panel (2 per line) */
-  const minRunActual = railItems.reduce((s,r) => {
-    const len = r.code.includes('3600') ? 3600 : 2400;
-    return s + (r.qty / strings) * len;
-  }, 0) / 2; // per-line length
-  const ifPerLine = Math.max(Math.ceil(minRunActual / 600), 2);
-  const ifMin     = isLand ? Math.max(ifPerLine, qty * 2) : ifPerLine;
-  const ifaceQty  = ifMin * 2 * strings; // × 2 rail lines × strings
+  /* Interfaces: n*2 per string (min 4), +2 extra for n≥20 (from sheet data) */
+  const ifaceQty  = calcIfaceQty(qty, strings);
   const ifCode    = IFACE_CODE[ifaceKey];
 
   /* Clamps */
@@ -624,6 +633,9 @@ function genA(){
   if(midQty > 0) bom.push({ code: mcCode, qty: midQty });
   if(spliceQty > 0) bom.push({ code:'ER-SP-AE', qty: spliceQty });
   bom.push({ code: ifCode,           qty: ifaceQty });
+  /* Tile Hook (TH) has rail clamp integrated in ER-I-PRO/01/AE.
+     IBR, Corrugated and Kliplok require a separate ER-RC-AE at same qty. */
+  if(ifaceKey !== 'TH') bom.push({ code:'ER-RC-AE', qty: ifaceQty });
   if(gcQty > 0) bom.push({ code:'EZ-GC-AE', qty: gcQty });
   bom.push({ code:'EZ-GL-U',         qty: lugQty });
   bom.push({ code:'EZ-CC-PV/4',      qty: ccQty });
@@ -685,7 +697,7 @@ function genB(){
   const lugQty  = 2 * strings;
   const mrCode  = MR_CODES[type].code;
 
-  /* Quoting order from spreadsheet */
+  /* Build in exact spreadsheet quoting order — do NOT sortBOM (it would reorder) */
   const bom = [];
   bom.push({ code:'WQ-TRE-3035-S', qty: endQty });
   if(midQty > 0) bom.push({ code:'WQ-TRM-3035-S', qty: midQty });
@@ -693,10 +705,9 @@ function genB(){
   bom.push({ code:'WQ-TR-GL',       qty: lugQty  });
   bom.push({ code:'EZ-CC-PV/4',     qty: ccQty   });
 
-  const sorted = sortBOM(bom);
-  const label  = `${qty}p ${MR_CODES[type].desc.split(' ')[0]} Mini-Rail ×${strings}`;
-  setLastBOM(sorted, label, 'b', document.getElementById('b-name').value.trim() || 'Unnamed');
-  renderPreview(sorted, 'Short Rail (Mini-Rail) BOM', 'cb', 'qb');
+  const label = `${qty}p ${MR_CODES[type].desc.split(' ')[0]} Mini-Rail ×${strings}`;
+  setLastBOM(bom, label, 'b', document.getElementById('b-name').value.trim() || 'Unnamed');
+  renderPreview(bom, 'Short Rail (Mini-Rail) BOM', 'cb', 'qb');
 }
 /* ═══════════════════════════════════════════════
    MODE C — GROUND MOUNT (FIXED TABLES)
