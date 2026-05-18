@@ -191,7 +191,7 @@ tfoot td:last-child{text-align:right}
       <!-- | separator -->
       <text x="174" y="57" font-family="Arial,sans-serif" font-weight="200" font-size="44" fill="white" opacity=".55">|</text>
       <!-- BOM thin — two spaces worth of gap after pipe -->
-      <text x="196" y="57" font-family="Arial,Helvetica,sans-serif" font-weight="300" font-size="44" fill="white" letter-spacing="2">BOM</text>
+      <text x="184" y="57" font-family="Arial,Helvetica,sans-serif" font-weight="300" font-size="44" fill="white" letter-spacing="2">BOM</text>
     </svg>
   </div>
   <div class="hdr-status">
@@ -447,13 +447,15 @@ const CAT = {
   /* ── Ground Mount Interface / Brackets */
   'WQ-CRX-CA60':        { desc:'Wochn C Rail Fix Adapter / L-Bracket (incl. hardware)',       cat:'G_Interface' },
   'WQ-SKX-L45':         { desc:'Wochn Back Strength Kit L45 3110mm (incl. 2x Self Tappers)',  cat:'G_Interface' },
-  /* ── Ground Mount Purlins */
+  /* ── Ground Mount Purlins (sort within G_Purlin by stock code char so 5500>5000>2100) */
+  'WQ-LTX-C60-5500MM':  { desc:'Wochn C60 Purlin 5500mm',                                     cat:'G_Purlin'    },
   'WQ-LTX-C60':         { desc:'Wochn C60 Purlin 5000mm',                                     cat:'G_Purlin'    },
   'WQ-LTX-C60-2100MM':  { desc:'Wochn C60 Purlin 2100mm',                                     cat:'G_Purlin'    },
-  'WQ-LTX-C60-5500MM':  { desc:'Wochn C60 Purlin 5500mm',                                     cat:'G_Purlin'    },
   /* ── Ground Mount Support Legs */
   'WQ-SC-2P-20-800':    { desc:'Wochn SC Support Leg 20deg, 800mm (incl. hardware)',          cat:'G_Support'   },
-  /* ── Grounding Clip (Clenergy) */
+  /* ── Ground Mount Grounding Lug (shared code EZ-GL-U, GM context) */
+  'EZ-GL-U':            { desc:'Universal Grounding Lug',                                     cat:'G_GroundLug' },
+  /* ── Ground Mount Grounding Clip */
   'EZ-GC-ST':           { desc:'Grounding Clip, with Clenergy Logo',                          cat:'G_GroundClip'},
 
   /* ── Mini-Rail (rails first, then clamps, lug, clip) */
@@ -463,22 +465,21 @@ const CAT = {
   'WQ-TRE-3035-S':      { desc:'Silver TR End Clamp (Universal)',                              cat:'B_EndClamp'  },
   'WQ-TRM-3035-S':      { desc:'Silver TR Mid Clamp, grounding clip integrated',               cat:'B_MidClamp'  },
   'WQ-TR-GL':           { desc:'TR Grounding Lug, J55 nut',                                   cat:'B_GroundLug' },
-  /* ── Shared across all modes */
-  'EZ-CC-PV/4':         { desc:'Universal Cable Clip for PV Panels',                          cat:'A_CableClip' },
+  /* ── Shared cable clip — G_CableClip puts it last in GM context */
+  'EZ-CC-PV/4':         { desc:'Universal Cable Clip for PV Panels',                          cat:'G_CableClip' },
 };
 
 /*  SORT WEIGHT MAP — mirrors exact top-to-bottom dashboard/quoting sequence.
-    Rooftop (A_*): EndClamp → MidClamp → Splice → Interface → GroundClip → GroundLug → CableClip → Rail
-    Mini-Rail (B_*): Rail → EndClamp → MidClamp → GroundLug → CableClip (from sheet)
-    Ground Mount (G_*): EndClamp → MidClamp → Splice → Interface → Purlin → Support → GroundLug → GroundClip → CableClip
-    Shared codes (EZ-GL-U, EZ-CC-PV/4) kept in consistent positions across modes via weight. */
+    Rooftop (A_*): EndClamp → MidClamp → Splice → Interface → RailClamp → GroundClip → GroundLug → CableClip → Rail
+    Mini-Rail (B_*): EndClamp → MidClamp → Rail → GroundLug → CableClip
+    Ground Mount (G_*): EndClamp → MidClamp → Splice → Interface → Purlin → Support → GroundLug → GroundClip → CableClip */
 const SORT_WEIGHT = {
   /* Rooftop quoting order */
   'A_EndClamp':   10,
   'A_MidClamp':   20,
   'A_Splice':     30,
   'A_Interface':  40,
-  'A_RailClamp':  45,  /* ER-RC-AE — sits right after interface for IBR/COR/KL */
+  'A_RailClamp':  45,
   'A_GroundClip': 50,
   'A_GroundLug':  60,
   'A_CableClip':  70,
@@ -489,19 +490,29 @@ const SORT_WEIGHT = {
   'B_Rail':       30,
   'B_GroundLug':  40,
   'B_CableClip':  50,
-  /* Ground Mount quoting order */
+  /* Ground Mount quoting order:
+     EndClamp → MidClamp → Splice → Interface → Purlin → Support → GroundLug → GroundClip → CableClip */
   'G_EndClamp':   10,
   'G_MidClamp':   20,
   'G_Splice':     30,
   'G_Interface':  40,
   'G_Purlin':     50,
-  'G_Support':    60,
-  'G_GroundLug':  70,  // EZ-GL-U lands here for GM
-  'G_GroundClip': 80,
+  'G_Support':    55,
+  'G_GroundLug':  60,
+  'G_GroundClip': 70,
+  'G_CableClip':  80,
+};
+/* Purlin display order within G_Purlin: 5500 → 5000 → 2100 */
+const PURLIN_ORDER = {
+  'WQ-LTX-C60-5500MM': 0,
+  'WQ-LTX-C60':        1,
+  'WQ-LTX-C60-2100MM': 2,
 };
 function sortW(code){
   const cat = CAT[code]?.cat ?? 'Z';
-  return (SORT_WEIGHT[cat] ?? 90) * 1000 + code.charCodeAt(0);
+  const base = (SORT_WEIGHT[cat] ?? 90) * 1000;
+  const sub = (cat === 'G_Purlin') ? (PURLIN_ORDER[code] ?? 9) : code.charCodeAt(0);
+  return base + sub;
 }
 
 /* ── BOM SORT — stable, exact quoting order ── */
