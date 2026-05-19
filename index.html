@@ -167,6 +167,7 @@ tfoot td:last-child{text-align:right}
 .hist-rm{background:none;border:none;color:var(--tx3);cursor:pointer;font-size:15px;line-height:1;padding:0 2px;transition:color .15s;flex-shrink:0}
 .hist-rm:hover{color:var(--danger)}
 .master-lbl{padding:10px 20px 8px;border-bottom:1px solid var(--border);font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--warn)}
+.bucket-hdr{padding:9px 20px;border-bottom:1px solid var(--border);border-top:1px solid var(--border);background:var(--card2);display:flex;align-items:center;gap:10px;font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;margin-top:2px}
 </style>
 </head>
 <body>
@@ -189,9 +190,9 @@ tfoot td:last-child{text-align:right}
       <!-- EZ bold -->
       <text x="90" y="57" font-family="'Arial Black','Impact',Arial,sans-serif" font-weight="900" font-size="44" fill="white" letter-spacing="-1">EZ</text>
       <!-- | separator -->
-      <text x="166" y="57" font-family="Arial,sans-serif" font-weight="200" font-size="44" fill="white" opacity=".55">|</text>
+      <text x="174" y="57" font-family="Arial,sans-serif" font-weight="200" font-size="44" fill="white" opacity=".55">|</text>
       <!-- BOM thin — two spaces worth of gap after pipe -->
-      <text x="190" y="57" font-family="Arial,Helvetica,sans-serif" font-weight="300" font-size="44" fill="white" letter-spacing="2">BOM</text>
+      <text x="196" y="57" font-family="Arial,Helvetica,sans-serif" font-weight="300" font-size="44" fill="white" letter-spacing="2">BOM</text>
     </svg>
   </div>
   <div class="hdr-status">
@@ -804,13 +805,26 @@ function catLabel(cat){
   return L[cat] || cat;
 }
 
-/* ═══════════════════════════════════════════════
-   PROJECT CART STATE
-═══════════════════════════════════════════════ */
-let lastBOM  = [];   // current preview [{code,qty}]
-let lastMeta = {};   // {label, mode, sectionName}
-let history  = [];   // [{label, mode, sectionName, bom[]}]
-let master   = [];   // [{code,qty}] consolidated, ordered
+/* ── PROJECT CART STATE ──────────────────────────────────────────── */
+let lastBOM  = [];
+let lastMeta = {};
+let history  = [];
+
+/* Three separate accumulation buckets — one per mode group.
+   Items within each bucket consolidate by stock code but never
+   mix across mode boundaries. */
+const buckets = { a:[], b:[], c:[] };
+
+const BUCKET_LABEL = {
+  a: 'Standard Rooftop (Aeri Rail)',
+  b: 'Short Rail (Mini-Rail)',
+  c: 'Ground Mount'
+};
+const BUCKET_COLOR = {    /* for PDF section headers */
+  a: [0,180,220],         /* cyan  */
+  b: [40,210,100],        /* lime  */
+  c: [160,100,240]        /* purple */
+};
 
 function setLastBOM(bom, label, mode, sectionName){
   lastBOM  = bom;
@@ -822,11 +836,12 @@ function addToProject(){
   const entry = { ...lastMeta, bom: lastBOM.map(i=>({...i})) };
   history.push(entry);
 
-  /* Accumulate into master — preserve first-seen order */
+  /* Accumulate into the correct mode bucket */
+  const bucket = buckets[entry.mode];
   entry.bom.forEach(item => {
-    const ex = master.find(m => m.code === item.code);
+    const ex = bucket.find(m => m.code === item.code);
     if(ex){ ex.qty += item.qty; }
-    else   { master.push({ code:item.code, qty:item.qty }); }
+    else   { bucket.push({ code:item.code, qty:item.qty }); }
   });
 
   renderCart();
@@ -836,11 +851,12 @@ function addToProject(){
 function removeFromProject(idx){
   const entry = history[idx];
   if(!entry) return;
+  const bucket = buckets[entry.mode];
   entry.bom.forEach(item => {
-    const i = master.findIndex(m => m.code === item.code);
+    const i = bucket.findIndex(m => m.code === item.code);
     if(i !== -1){
-      master[i].qty -= item.qty;
-      if(master[i].qty <= 0) master.splice(i, 1);
+      bucket[i].qty -= item.qty;
+      if(bucket[i].qty <= 0) bucket.splice(i, 1);
     }
   });
   history.splice(idx, 1);
@@ -848,7 +864,8 @@ function removeFromProject(idx){
 }
 
 function clearProject(){
-  history = []; master = [];
+  history = [];
+  buckets.a = []; buckets.b = []; buckets.c = [];
   document.getElementById('cart').style.display = 'none';
 }
 
@@ -869,29 +886,52 @@ function renderCart(){
       <button class="hist-rm" onclick="removeFromProject(${i})">×</button>
     </div>`).join('');
 
-  /* Master BOM — sortBOM handles A and B modes well.
-     For GM items that share codes with rooftop (EZ-GL-U, EZ-CC-PV/4)
-     they accumulate correctly since we match by stockCode. */
-  const sorted = sortBOM(master);
-  let lastCat = null, grand = 0;
-  let rows = '';
-  sorted.forEach(item => {
-    const info = CAT[item.code] || { desc:item.code, cat:'Other' };
-    if(info.cat !== lastCat){
-      rows += `<tr class="cat-sep"><td colspan="3">${catLabel(info.cat)}</td></tr>`;
-      lastCat = info.cat;
-    }
-    grand += item.qty;
-    rows += `<tr><td class="cm">${esc(item.code)}</td><td>${esc(info.desc)}</td><td><span class="qty-pill qm">${item.qty}</span></td></tr>`;
+  /* Master BOM — render each active bucket as its own labelled section */
+  const activeModes = ['a','b','c'].filter(m => buckets[m].length > 0);
+  let allSections = '';
+  let grandTotal = 0;
+  let totalItems = 0;
+
+  activeModes.forEach(mode => {
+    const sorted = sortBOM(buckets[mode]);
+    const modeTotal = sorted.reduce((s,i) => s+i.qty, 0);
+    grandTotal += modeTotal;
+    totalItems += sorted.length;
+
+    /* Bucket header banner */
+    const accentVar = { a:'var(--cyan)', b:'var(--lime)', c:'var(--purple)' }[mode];
+    allSections += `
+      <div class="bucket-hdr" style="border-left:3px solid ${accentVar}">
+        <span style="color:${accentVar}">${esc(BUCKET_LABEL[mode])}</span>
+        <span class="bom-badge" style="margin-left:auto">${sorted.length} items · ${modeTotal} qty</span>
+      </div>`;
+
+    /* Bucket rows */
+    let lastCat = null, rows = '';
+    sorted.forEach(item => {
+      const info = CAT[item.code] || { desc:item.code, cat:'Other' };
+      if(info.cat !== lastCat){
+        rows += `<tr class="cat-sep"><td colspan="3">${catLabel(info.cat)}</td></tr>`;
+        lastCat = info.cat;
+      }
+      rows += `<tr><td class="cm">${esc(item.code)}</td><td>${esc(info.desc)}</td><td><span class="qty-pill qm">${item.qty}</span></td></tr>`;
+    });
+
+    allSections += `
+      <div class="bom-tbl-wrap"><table>
+        <thead><tr><th style="width:150px">Stock Code</th><th>Description</th><th style="width:90px">Total Qty</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>`;
   });
 
-  document.getElementById('master-body').innerHTML = `
-    <div class="bom-tbl-wrap"><table>
-      <thead><tr><th style="width:150px">Stock Code</th><th>Description</th><th style="width:90px">Total Qty</th></tr></thead>
-      <tbody>${rows}</tbody>
-      <tfoot><tr><td colspan="2">${sorted.length} unique items · ${n} array(s)</td><td>${grand} total</td></tr></tfoot>
-    </table></div>`;
+  /* Grand total footer */
+  allSections += `
+    <div style="padding:8px 20px;background:var(--card2);border-top:1px solid var(--border);display:flex;justify-content:space-between;font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--tx2)">
+      <span>${totalItems} unique items · ${n} array(s)</span>
+      <span style="color:var(--warn)">${grandTotal} total</span>
+    </div>`;
 
+  document.getElementById('master-body').innerHTML = allSections;
   checkPDF();
 }
 
@@ -1006,42 +1046,69 @@ async function doPDF(){
   });
   y += 5;
 
-  /* ── Consolidated BOM */
+  /* ── Consolidated BOM — one labelled section per active mode bucket */
   drawSection('CONSOLIDATED BILL OF MATERIALS');
 
-  const sorted = sortBOM(master);
-  const grand  = sorted.reduce((s,m)=>s+m.qty,0);
+  const activeModes = ['a','b','c'].filter(m => buckets[m].length > 0);
+  let grandTotal = 0;
+  let grandItems = 0;
 
-  /* Build body with category sub-headers */
-  let lastCat2 = null;
-  const tableBody = [];
-  sorted.forEach(m => {
-    const info = CAT[m.code] || { desc:m.code, cat:'Other' };
-    const cLabel = catLabel(info.cat);
-    if(info.cat !== lastCat2){
-      tableBody.push([{
-        content: cLabel,
-        colSpan:3,
-        styles:{ fillColor:[38,38,38], textColor:[160,160,160], fontSize:6.5, fontStyle:'bold', cellPadding:2 }
-      }]);
-      lastCat2 = info.cat;
-    }
-    tableBody.push([m.code, info.desc, String(m.qty)]);
+  activeModes.forEach((mode, mi) => {
+    const sorted = sortBOM(buckets[mode]);
+    const modeTotal = sorted.reduce((s,m)=>s+m.qty,0);
+    grandTotal += modeTotal;
+    grandItems += sorted.length;
+    const [cr,cg,cb] = BUCKET_COLOR[mode];
+
+    /* Section label row above each table */
+    if(mi > 0){ y += 4; }
+    doc.setFont('helvetica','bold'); doc.setFontSize(8);
+    doc.setTextColor(cr,cg,cb);
+    doc.text(BUCKET_LABEL[mode].toUpperCase(), 14, y);
+    doc.setDrawColor(cr,cg,cb); doc.setLineWidth(0.2);
+    doc.line(14, y+1, W-14, y+1);
+    y += 5;
+    if(y > PH-40){ doc.addPage(); y=20; }
+
+    /* Build table body with category sub-headers */
+    let lastCat2 = null;
+    const tableBody = [];
+    sorted.forEach(m => {
+      const info = CAT[m.code] || { desc:m.code, cat:'Other' };
+      if(info.cat !== lastCat2){
+        tableBody.push([{
+          content: catLabel(info.cat),
+          colSpan:3,
+          styles:{ fillColor:[42,42,42], textColor:[160,160,160], fontSize:6.5, fontStyle:'bold', cellPadding:2 }
+        }]);
+        lastCat2 = info.cat;
+      }
+      tableBody.push([m.code, info.desc, String(m.qty)]);
+    });
+
+    doc.autoTable({
+      startY: y,
+      head: [['Stock Code','Description','Qty']],
+      body: tableBody,
+      foot: [['', `${sorted.length} items · ${BUCKET_LABEL[mode]}`, `${modeTotal}`]],
+      styles:       { fontSize:7.5, cellPadding:2.2, textColor:[40,40,40], lineColor:[220,220,220], lineWidth:0.18 },
+      headStyles:   { fillColor:[cr,cg,cb], textColor:[255,255,255], fontStyle:'bold', fontSize:7.5 },
+      footStyles:   { fillColor:[248,248,248], textColor:[120,120,120], fontStyle:'italic', fontSize:7 },
+      alternateRowStyles: { fillColor:[250,250,250] },
+      columnStyles: { 0:{cellWidth:36,fontStyle:'bold',textColor:[0,90,110]}, 2:{cellWidth:18,halign:'right'} },
+      margin:       { left:14, right:14 },
+      theme:        'grid',
+    });
+
+    y = doc.lastAutoTable.finalY + 3;
+    if(y > PH-20){ doc.addPage(); y=20; }
   });
 
-  doc.autoTable({
-    startY: y,
-    head: [['Stock Code','Description','Qty']],
-    body: tableBody,
-    foot: [['', `${sorted.length} unique items · ${history.length} array(s)`, `Total: ${grand}`]],
-    styles:       { fontSize:7.5, cellPadding:2.2, textColor:[40,40,40], lineColor:[220,220,220], lineWidth:0.18 },
-    headStyles:   { fillColor:[26,26,26], textColor:[255,183,77], fontStyle:'bold', fontSize:7.5 },
-    footStyles:   { fillColor:[245,245,245], textColor:[100,100,100], fontStyle:'bold', fontSize:7.5 },
-    alternateRowStyles: { fillColor:[250,250,250] },
-    columnStyles: { 0:{cellWidth:36,fontStyle:'bold',textColor:[0,90,110]}, 2:{cellWidth:18,halign:'right'} },
-    margin:       { left:14, right:14 },
-    theme:        'grid',
-  });
+  /* Grand total summary line */
+  doc.setFont('helvetica','bold'); doc.setFontSize(7.5);
+  doc.setTextColor(80,80,80);
+  doc.text(`Grand Total: ${grandItems} unique items across ${history.length} array(s) — ${grandTotal} components`, 14, y+4);
+  y += 4;
 
   /* ── Footer */
   y = PH - 10;
