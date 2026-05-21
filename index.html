@@ -586,14 +586,15 @@ function buildRailItems(minRunPerLine, strings){
 function describeRails(minRunPerLine){
   const sel = selectRailsPerLine(minRunPerLine);
   const ov  = Math.round(sel.ov);
+  const segs = sel.shared ? 1 : (sel.n36 + sel.n24);
   if(sel.shared){
     const tag = sel.n24 ? '2400mm' : '3600mm';
-    return { str:`1 × ${tag} (shared — both lines cut from one piece)`, ov };
+    return { str:`1 × ${tag} (shared — both lines cut from one piece)`, ov, segs };
   }
   const parts = [];
   if(sel.n36) parts.push(`${sel.n36*2} × 3600mm`);
   if(sel.n24) parts.push(`${sel.n24*2} × 2400mm`);
-  return { str: parts.join(' + ') + ' (total, both lines)', ov };
+  return { str: parts.join(' + ') + ' (total, both lines)', ov, segs };
 }
 
 /* ── SPLICE FORMULA kept for reference: floor((qty-1)/3)×2 per string ── */
@@ -639,8 +640,12 @@ function genA(){
   /* Rails */
   const railItems = buildRailItems(minRunPL, strings);
 
-  /* Splices: floor((qty-1)/3) × 2 per string (from sheet data) */
-  const spliceQty = Math.floor((qty - 1) / 3) * 2 * strings;
+  /* Splices: derived from actual rail segments per line.
+     Joins per line = segments per line − 1. × 2 lines.
+     Shared single-piece rail = 1 segment = 0 joins = 0 splices. */
+  const railSel    = selectRailsPerLine(minRunPL);
+  const segsPerLine = railSel.shared ? 1 : (railSel.n36 + railSel.n24);
+  const spliceQty  = Math.max(0, segsPerLine - 1) * 2 * strings;
 
   /* Interfaces: n*2 per string (min 4), +2 extra for n≥20 (from sheet data) */
   const ifaceQty  = calcIfaceQty(qty, strings);
@@ -690,11 +695,11 @@ function onAChange(){
   const qty = parseInt(document.getElementById('a-qty').value)   || 1;
   const dim = isLand ? ph : pw;
   const minRunPL = dim * qty + 20 * (qty - 1);
-  const { str: railStr, ov } = describeRails(minRunPL);
-  const splices = Math.floor((qty-1)/3)*2;
+  const railSel2   = describeRails(minRunPL);
+  const splicePreview = railSel2.segs > 1 ? `${(railSel2.segs - 1) * 2} (${railSel2.segs - 1} joins × 2 lines)` : 'none';
   const p = document.getElementById('a-preview');
   p.style.display = '';
-  p.innerHTML = `<strong>Min run:</strong> ${minRunPL}mm/line &nbsp;|&nbsp; <strong>Rails:</strong> ${railStr} &nbsp;|&nbsp; <strong>~Overhang:</strong> ${ov}mm/side &nbsp;|&nbsp; <strong>Splices:</strong> ${splices > 0 ? splices + ' pairs' : 'none'}`;
+  p.innerHTML = `<strong>Min run:</strong> ${minRunPL}mm/line &nbsp;|&nbsp; <strong>Rails:</strong> ${railSel2.str} &nbsp;|&nbsp; <strong>~Overhang:</strong> ${railSel2.ov}mm/side &nbsp;|&nbsp; <strong>Splices:</strong> ${splicePreview}`;
 }
 
 function showRailPreview(){ /* replaced by inline in genA */ }
