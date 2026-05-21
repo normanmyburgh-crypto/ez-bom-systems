@@ -527,57 +527,73 @@ function sortBOM(bom){
    Algorithm:
      1. If both lines fit in a single shared rail → 1 piece total.
      2. Otherwise per-line: find combo of 3600+2400 that covers
-        min_run with the least pieces and ≤200mm overhang each side.
-        If no combo achieves ≤200mm (unavoidable), pick minimum overhang.
-══════════════════════════════════════════════════ */
-function buildRailItems(minRunPerLine, strings){
-  const doubled = minRunPerLine * 2;
-  let n36t, n24t;
+/*══════════════════════════════════════════════════
+   RAIL SELECTION ENGINE — 3600mm + 2400mm only
+   Rules:
+   • min_run  = panelDim×qty + 20×(qty−1)   [panel span + mid-clamp gaps]
+   • Rail must cover min_run + at least 20mm EACH side (40mm total) — never zero/negative overhang
+   • Prefer fewest pieces. If within-200mm/side combo exists, prefer it.
+     If not (large panels / awkward span), accept the next shortest combo.
+   • Shared single rail: if ONE rail piece covers min_run + 40mm, buy 1 piece (both lines cut from it).
+══════════════════════════════════════════════════*/
+const MIN_OV = 20; // minimum overhang each side in mm
 
-  if(doubled <= 2400){
-    /* Both lines cut from one 2400mm piece */
-    n36t = 0; n24t = 1;
-  } else if(doubled <= 3600){
-    /* Both lines cut from one 3600mm piece */
-    n36t = 1; n24t = 0;
-  } else {
-    /* Per-line optimisation */
-    let best = null;
-    const maxPieces = Math.ceil(minRunPerLine / 2400) + 2;
-    for(let n36 = Math.floor(minRunPerLine / 3600) + 1; n36 >= 0; n36--){
-      for(let n24 = 0; n24 <= maxPieces; n24++){
-        const total = n36 * 3600 + n24 * 2400;
-        if(total < minRunPerLine) continue;
-        const ov = (total - minRunPerLine) / 2; // overhang each side
-        const pieces = n36 + n24;
-        const score = pieces * 10000 + ov; // prefer fewer pieces, then less overhang
-        if(!best || score < best.score){
-          best = { score, n36, n24, ov };
-        }
-        if(ov > 400) break; // no point going further on n24
+function selectRailsPerLine(minRunPerLine){
+  const minRequired = minRunPerLine + MIN_OV * 2; // total rail length must exceed this
+
+  /* Check shared single-piece scenarios first */
+  if(minRequired <= 2400) return { n36:0, n24:1, shared:true,  total:2400, ov:(2400-minRunPerLine)/2 };
+  if(minRequired <= 3600) return { n36:1, n24:0, shared:true,  total:3600, ov:(3600-minRunPerLine)/2 };
+
+  /* Per-line optimisation */
+  let best = null;
+  const maxN36 = Math.floor(minRunPerLine / 3600) + 3;
+  const maxN24 = Math.floor(minRunPerLine / 2400) + 3;
+  for(let n36 = 0; n36 <= maxN36; n36++){
+    for(let n24 = 0; n24 <= maxN24; n24++){
+      if(n36 + n24 === 0) continue;
+      const total = n36 * 3600 + n24 * 2400;
+      if(total < minRequired) continue;          // too short — would have < 20mm overhang
+      const ov = (total - minRunPerLine) / 2;
+      const pieces = n36 + n24;
+      const within200 = ov <= 200;
+      /* Score: fewest pieces first, then prefer within-200, then least overhang */
+      const score = pieces * 1000000 + (within200 ? 0 : 500000) + Math.round(ov);
+      if(!best || score < best.score){
+        best = { score, n36, n24, total, ov, shared:false, pieces };
       }
     }
-    if(!best) best = { n36:0, n24: Math.ceil(minRunPerLine/2400) };
-    n36t = best.n36 * 2;
-    n24t = best.n24 * 2;
   }
+  return best || { n36:0, n24:Math.ceil(minRequired/2400), shared:false,
+                   total:Math.ceil(minRequired/2400)*2400, ov:0 };
+}
 
+function buildRailItems(minRunPerLine, strings){
+  const sel = selectRailsPerLine(minRunPerLine);
   const items = [];
-  if(n36t > 0) items.push({ code:'ER-R-AE/3600', qty: n36t * strings });
-  if(n24t > 0) items.push({ code:'ER-R-AE/2400', qty: n24t * strings });
+  if(sel.shared){
+    /* One piece total covers both lines */
+    if(sel.n36 > 0) items.push({ code:'ER-R-AE/3600', qty: 1 * strings });
+    if(sel.n24 > 0) items.push({ code:'ER-R-AE/2400', qty: 1 * strings });
+  } else {
+    /* Per-line qty × 2 lines × strings */
+    if(sel.n36 > 0) items.push({ code:'ER-R-AE/3600', qty: sel.n36 * 2 * strings });
+    if(sel.n24 > 0) items.push({ code:'ER-R-AE/2400', qty: sel.n24 * 2 * strings });
+  }
   return items;
 }
 
-/* ── Helper: describe rail selection for preview ── */
 function describeRails(minRunPerLine){
-  const doubled = minRunPerLine * 2;
-  if(doubled <= 2400) return { str:`1 × 2400mm (shared, both lines)`, ov: Math.round((2400-doubled)/2) };
-  if(doubled <= 3600) return { str:`1 × 3600mm (shared, both lines)`, ov: Math.round((3600-doubled)/2) };
-  const tmp = buildRailItems(minRunPerLine, 1);
-  const pieces = tmp.map(r => `${r.qty} × ${r.code.match(/\d+mm/)?.[0] ?? r.code}`).join(' + ');
-  const totalLen = tmp.reduce((s,r) => s + r.qty * (r.code.includes('3600') ? 3600 : 2400), 0);
-  const ov = Math.round((totalLen/2 - minRunPerLine)/2);
-  return { str: pieces + ' (per 2 lines)', ov };
+  const sel = selectRailsPerLine(minRunPerLine);
+  const ov  = Math.round(sel.ov);
+  if(sel.shared){
+    const tag = sel.n24 ? '2400mm' : '3600mm';
+    return { str:`1 × ${tag} (shared — both lines cut from one piece)`, ov };
+  }
+  const parts = [];
+  if(sel.n36) parts.push(`${sel.n36*2} × 3600mm`);
+  if(sel.n24) parts.push(`${sel.n24*2} × 2400mm`);
+  return { str: parts.join(' + ') + ' (total, both lines)', ov };
 }
 
 /* ── SPLICE FORMULA kept for reference: floor((qty-1)/3)×2 per string ── */
@@ -614,10 +630,10 @@ function genA(){
   const mcCode   = 'ER-IC-AE/30-40/L50';
   const totalPan = qty * strings;
 
-  /* Rail direction dimension */
+  /* Rail direction: portrait uses panel WIDTH, landscape uses panel HEIGHT */
   const dim = isLand ? ph : pw;
-  /* Minimum run = panels + mid-clamp gaps. No fixed overhang baked in —
-     the rail optimiser finds the actual best fit (max 200mm/side). */
+  /* Bare span = panels + mid-clamp gaps (no fixed overhang here —
+     selectRailsPerLine enforces ≥20mm each side automatically) */
   const minRunPL = dim * qty + 20 * (qty - 1);
 
   /* Rails */
